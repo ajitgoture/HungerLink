@@ -23,6 +23,7 @@ const makeItem = () => ({
 
 
 const DonateFoodForm = () => {
+  const { t, i18n } = useTranslation();
   // Full unit options list
 const UNIT_OPTIONS = [{
   value: 'Pieces',
@@ -58,7 +59,6 @@ const UNIT_OPTIONS = [{
   value: 'Other',
   label: t("Other")
 }];
-  const { t, i18n } = useTranslation();
   
   
   const {
