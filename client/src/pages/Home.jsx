@@ -8,7 +8,7 @@ const HERO_SLIDES = [{
   url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
   labelKey: 'home.hero.slide1'
 }, {
-  url: 'https://images.unsplash.com/photo-1593113630400-ea4288922559?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+  url: 'https://images.unsplash.com/photo-1593113595332-cd288d649433?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
   labelKey: 'home.hero.slide2'
 }, {
   url: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
