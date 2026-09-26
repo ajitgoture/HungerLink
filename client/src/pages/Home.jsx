@@ -91,36 +91,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* =========================================================
-            STATS BAR
-         ========================================================= */}
-        <section className="bg-slate-900 text-white py-10">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              {[{
-              icon: <PackageCheck className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
-              num: '10,000+',
-              label: t("Donations Shared")
-            }, {
-              icon: <Users className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
-              num: '5,000+',
-              label: t("People Helped")
-            }, {
-              icon: <HeartHandshake className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
-              num: '2,500+',
-              label: t("Active Donors")
-            }, {
-              icon: <Star className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
-              num: '4.9 / 5',
-              label: t("Community Rating")
-            }].map((s, i) => <div key={i}>
-                  {s.icon}
-                  <div className="text-3xl font-black">{s.num}</div>
-                  <div className="text-slate-400 text-sm mt-1">{s.label}</div>
-                </div>)}
-            </div>
-          </div>
-        </section>
+        
 
         {/* =========================================================
             SPLIT IMAGE — FOOD MODULE
@@ -282,6 +253,37 @@ export default function Home() {
               <button onClick={() => navigate('/explore')} className="px-10 py-4 rounded-2xl bg-white/10 border border-white/30 text-white font-bold text-lg hover:bg-white/20 transition-all backdrop-blur-sm">
                 {t("home.cta.button2")}
               </button>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================
+            STATS BAR
+         ========================================================= */}
+        <section className="bg-slate-900 text-white py-10">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[{
+              icon: <PackageCheck className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
+              num: '10,000+',
+              label: t("Donations Shared")
+            }, {
+              icon: <Users className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
+              num: '5,000+',
+              label: t("People Helped")
+            }, {
+              icon: <HeartHandshake className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
+              num: '2,500+',
+              label: t("Active Donors")
+            }, {
+              icon: <Star className="w-7 h-7 mx-auto text-emerald-400 mb-2" />,
+              num: '4.9 / 5',
+              label: t("Community Rating")
+            }].map((s, i) => <div key={i}>
+                  {s.icon}
+                  <div className="text-3xl font-black">{s.num}</div>
+                  <div className="text-slate-400 text-sm mt-1">{s.label}</div>
+                </div>)}
             </div>
           </div>
         </section>
