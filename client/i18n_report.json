@@ -1,0 +1,39 @@
+{
+  "\\src\\components\\ProfileQRCodeModal.jsx": [
+    "JSXText: \"192.168.x.x\"",
+    "JSXText: \"localhost\""
+  ],
+  "\\src\\components\\ProtectedRoute.jsx": [
+    "JSXText: \"You do not have permission to view this page. This area requires\"",
+    "JSXText: \"privileges.\"",
+    "JSXText: \"Return to Home\""
+  ],
+  "\\src\\components\\ReviewForm.jsx": [
+    "showToast(): \"error\""
+  ],
+  "\\src\\pages\\cloth\\DonateClothForm.jsx": [
+    "showToast(): \"success\"",
+    "showToast(): \"error\"",
+    "showToast(): \"error\"",
+    "showToast(): \"error\"",
+    "showToast(): \"error\"",
+    "showToast(): \"error\"",
+    "showToast(): \"error\"",
+    "showToast(): \"error\"",
+    "setError(): \"\"",
+    "showToast(): \"success\""
+  ],
+  "\\src\\pages\\Explore.jsx": [
+    "showToast(): \"warning\"",
+    "showToast(): \"error\""
+  ],
+  "\\src\\pages\\Login.jsx": [
+    "setError(): \"\""
+  ],
+  "\\src\\pages\\NotFound.jsx": [
+    "JSXText: \"Return to Home\""
+  ],
+  "\\src\\pages\\Register.jsx": [
+    "setError(): \"\""
+  ]
+}
