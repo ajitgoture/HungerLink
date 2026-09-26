@@ -1,6 +1,8 @@
 import React, { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const Textarea = forwardRef(({ className = '', error, label, id, ...props }, ref) => {
+  const { t } = useTranslation();
   return (
     <div className="w-full">
       {label && (

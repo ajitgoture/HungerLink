@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Utensils, Shirt, Droplet, ArrowRight, Sparkles, Clock, MapPin, ShieldCheck } from 'lucide-react';
 
 const Categories = () => {
+  const { t } = useTranslation();
   const categories = [
     {
       id: 'food',
