@@ -85,7 +85,10 @@ const createRequest = async (req, res) => {
     if (io) {
       io.to(`user_${donation.donor._id.toString()}`).emit('FOOD_REQUESTED', {
         notification: donorNotif,
-        request: await request.populate('receiver', 'name city phone'),
+        request: await request.populate([
+          { path: 'receiver', select: 'name city phone' },
+          { path: 'donation' }
+        ]),
         donation,
       });
       io.to(`user_${receiverId.toString()}`).emit('notification:new', receiverNotif);

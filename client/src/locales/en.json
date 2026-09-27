@@ -1174,5 +1174,6 @@
   "home.food.feature1": "Real-time GPS location sharing",
   "home.food.feature2": "Automatic food expiry tracking",
   "home.food.feature3": "Veg & Non-Veg categories",
-  "home.food.feature4": "Secure QR-verified handover"
+  "home.food.feature4": "Secure QR-verified handover",
+  "New food request just received!": "New food request just received!"
 }

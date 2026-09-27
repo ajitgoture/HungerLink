@@ -32,6 +32,7 @@ const RequestsReceived = () => {
       setLoading(false);
     }
   };
+  const [newRequestAlert, setNewRequestAlert] = useState(false);
   useEffect(() => {
     fetchRequests();
   }, []);
@@ -41,17 +42,18 @@ const RequestsReceived = () => {
   useEffect(() => {
     if (!socket) return;
     const handleNewRequest = data => {
-      // Append the new request to the top of the list
+      // Immediately prepend raw request for instant visual feedback
       if (data.request) {
         setRequests(prev => {
-          // Check for duplicate just in case
           if (prev.find(r => r._id === data.request._id)) return prev;
-
-          // Re-sort logic can be complex, but simply prepending works for live updates.
-          // The next fetch will sort it properly.
           return [data.request, ...prev];
         });
       }
+      // Show a live alert banner and do a full refetch to get matchData scores
+      setNewRequestAlert(true);
+      setTimeout(() => setNewRequestAlert(false), 6000);
+      // Refetch after a short delay so the DB has time to settle
+      setTimeout(() => fetchRequests(), 1500);
     };
     socket.on('FOOD_REQUESTED', handleNewRequest);
     return () => socket.off('FOOD_REQUESTED', handleNewRequest);
@@ -97,6 +99,14 @@ const RequestsReceived = () => {
             <ArrowLeft className="w-4 h-4" /> {t("Donor Dashboard")}
           </Link>
         </div>
+
+        {/* ===== REAL-TIME NEW REQUEST ALERT BANNER ===== */}
+        {newRequestAlert && (
+          <div className="flex items-center gap-3 p-4 bg-emerald-500 text-white rounded-2xl shadow-xl border border-emerald-400">
+            <span className="w-3 h-3 rounded-full bg-white animate-ping flex-shrink-0" />
+            <span className="font-extrabold text-sm">🔔 {t("New food request just received!")}</span>
+          </div>
+        )}
 
         {/* Requests List */}
         {loading ? <div className="py-16 text-center text-slate-400">{t("Loading incoming requests...")}</div> : requests.length === 0 ? <div className="py-16 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3">
