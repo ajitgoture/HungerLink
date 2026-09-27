@@ -94,12 +94,15 @@ const ClothMapExplorer = () => {
         <div className="h-[600px] w-full rounded-3xl overflow-hidden border border-slate-200 shadow-xl relative z-0">
           {loading ? <div className="h-full w-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold">
               {t("Loading interactive clothes map...")}
-            </div> : <MapContainer center={[40.7128, -74.006]} zoom={12} scrollWheelZoom={true} className="h-full w-full">
+            </div> : <MapContainer center={[20.5937, 78.9629]} zoom={5} scrollWheelZoom={true} className="h-full w-full">
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
               {donations.map(donation => {
             const loc = donation.approximateLocation;
             if (!loc || !loc.lat || !loc.lng) return null;
+            // Skip NYC placeholder coordinates
+            if (loc.lat === 40.7128 && loc.lng === -74.006) return null;
+            if (loc.lat === 0 && loc.lng === 0) return null;
             return <Marker key={donation._id} position={[loc.lat, loc.lng]} icon={clothPinIcon}>
                     <Popup>
                       <div className="p-2 space-y-2 max-w-xs">

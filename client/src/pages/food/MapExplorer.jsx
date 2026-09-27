@@ -53,11 +53,15 @@ const MapExplorer = () => {
 
         {/* Map Container */}
         <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xl overflow-hidden h-[70vh] relative z-0">
-          {loading ? <div className="h-full flex items-center justify-center text-slate-400">{t("Loading map markers...")}</div> : <MapContainer center={[40.7128, -74.006]} zoom={5} scrollWheelZoom={true} className="h-full w-full rounded-2xl">
+          {loading ? <div className="h-full flex items-center justify-center text-slate-400">{t("Loading map markers...")}</div> : <MapContainer center={[20.5937, 78.9629]} zoom={5} scrollWheelZoom={true} className="h-full w-full rounded-2xl">
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               {donations.map(donation => {
-            const lat = donation.approximateLocation?.lat || 40.7128;
-            const lng = donation.approximateLocation?.lng || -74.006;
+            const lat = donation.approximateLocation?.lat;
+            const lng = donation.approximateLocation?.lng;
+            // Skip markers with no coordinates, NYC placeholder, or 0,0
+            if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
+            if (lat === 40.7128 && lng === -74.006) return null;
+            if (lat === 0 && lng === 0) return null;
             return <Marker key={donation._id} position={[lat, lng]}>
                     <Popup>
                       <div className="p-1 space-y-1 max-w-xs">
