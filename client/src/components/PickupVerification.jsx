@@ -70,7 +70,7 @@ const PickupVerification = ({ request, isDonorView, onUpdate }) => {
     showToast('Success', 'Food Handover Verified');
     
     // 3. Update existing request status (Completes handover)
-    const res = await api.post(`/transfer/food/${donation._id}/complete`, {});
+    const res = await api.patch(`/transfer/food/${donation._id}/complete`, {});
     if (onUpdate) onUpdate(res.data);
     
     setIsVerifying(false);

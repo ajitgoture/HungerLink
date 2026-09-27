@@ -24,6 +24,7 @@ export const TransferTimeline = ({
   const [showScanner, setShowScanner] = useState(false);
   const status = donation.status;
   const moduleType = donation.moduleType || (donation.foodName ? 'food' : 'cloth');
+  const isReceiver = !isDonor; // isDonor is passed as prop; receiver is the other party
 
   // Define steps
   const steps = [{

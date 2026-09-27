@@ -145,7 +145,7 @@ const DonationDetail = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-lg font-bold text-slate-900 line-clamp-1">{isFood ? donation.title : `${donation.clothingCategory} - ${donation.clothingType}`}</h1>
+            <h1 className="text-lg font-bold text-slate-900 line-clamp-1">{isFood ? (donation.foodName || donation.title) : `${donation.clothingCategory} - ${donation.clothingType}`}</h1>
           </div>
           <Badge className={isAvailable ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}>
             {t(donation.status)}
@@ -171,7 +171,7 @@ const DonationDetail = () => {
                 {/* We pick up from the terminal output */}
                 <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-900 mb-2">{isFood ? donation.title : `${donation.clothingCategory} - ${donation.clothingType}`}</h2>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2">{isFood ? (donation.foodName || donation.title) : `${donation.clothingCategory} - ${donation.clothingType}`}</h2>
                     <div className="flex items-center gap-4 text-sm text-slate-500">
                       <div className="flex items-center gap-1.5">
                         <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
