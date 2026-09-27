@@ -103,7 +103,7 @@ const MyDonations = () => {
           </div> : <div className="space-y-8">
             {donations.map(donation => {
           const acceptedReceiver = donation.acceptedReceiver;
-          const isAccepted = ['ACCEPTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(donation.status);
+          const isAccepted = ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ON_THE_WAY', 'ARRIVED', 'HANDOVER_PENDING'].includes(donation.status);
           return <div key={donation._id} className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>

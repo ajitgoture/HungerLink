@@ -72,7 +72,7 @@ const UNIT_OPTIONS = [{
   // Redirect if not a donor
   React.useEffect(() => {
     if (user && !['Food Donor', 'donor'].includes(user.role)) {
-      showToast('toastTitle_accessDenied'), 'toastMsg_onlyFoodDonorsCanPostFoodDonations';
+      showToast('toastTitle_accessDenied', 'toastMsg_onlyFoodDonorsCanPostFoodDonations');
       navigate('/dashboard');
     }
   }, [user, navigate, showToast]);
@@ -192,11 +192,11 @@ const UNIT_OPTIONS = [{
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        showToast('toastTitle_fileTooLarge'), 'toastMsg_imageMustBeUnder5mb';
+        showToast('toastTitle_fileTooLarge', 'toastMsg_imageMustBeUnder5mb');
         return;
       }
       if (!file.type.startsWith('image/')) {
-        showToast('toastTitle_invalidFile'), 'toastMsg_pleaseUploadAValidImageFile';
+        showToast('toastTitle_invalidFile', 'toastMsg_pleaseUploadAValidImageFile');
         return;
       }
       setImageFile(file);
@@ -283,7 +283,7 @@ const UNIT_OPTIONS = [{
           'Content-Type': 'multipart/form-data'
         }
       });
-      showToast('toastTitle_success'), 'toastMsg_foodDonationPostedSuccessfully';
+      showToast('toastTitle_success', 'toastMsg_foodDonationPostedSuccessfully');
       navigate('/food/donor-dashboard');
     } catch (err) {
       setErrors([err.response?.data?.message || 'Failed to post donation']);

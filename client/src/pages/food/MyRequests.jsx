@@ -121,8 +121,8 @@ const MyRequests = () => {
             {requests.map(req => {
           const donation = req.donation;
           const donor = req.donor;
-          const isAccepted = ['ACCEPTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'RECEIVED', 'COMPLETED'].includes(req.status);
-          const canConfirmReceived = ['ACCEPTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(req.status) && req.status !== 'COMPLETED';
+          const isAccepted = ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ON_THE_WAY', 'ARRIVED', 'HANDOVER_PENDING', 'RECEIVED', 'COMPLETED'].includes(req.status);
+          const canConfirmReceived = ['ACCEPTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ON_THE_WAY', 'ARRIVED', 'HANDOVER_PENDING'].includes(req.status);
           return <div key={req._id} className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6">
                   {/* Top Bar */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
