@@ -53,8 +53,8 @@ const DonateClothForm = () => {
   const [locationData, setLocationData] = useState({
     city: user?.city || '',
     pickupAddress: user?.address || '',
-    lat: user?.location?.coordinates?.[1] || 40.7128,
-    lng: user?.location?.coordinates?.[0] || -74.006,
+    lat: null,   // No hardcoded default — must come from GPS or user input
+    lng: null,
     contactNumber: user?.phone || '',
   });
 
@@ -194,6 +194,9 @@ const DonateClothForm = () => {
     }
     if (!locationData.city || !locationData.pickupAddress) {
       return setError("Pickup city and address are required");
+    }
+    if (!locationData.lat || !locationData.lng) {
+      return setError('GPS coordinates are required. Please click "Use Current Location" to get your actual location.');
     }
     if (!timelines.availableFrom) {
       return setError("Please specify when the clothes are available from");

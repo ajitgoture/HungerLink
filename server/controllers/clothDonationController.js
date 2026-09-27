@@ -84,8 +84,18 @@ const createClothDonation = async (req, res) => {
       imageUrls.push(req.body.imageUrl);
     }
 
-    const latitude = parseFloat(lat) || 40.7128;
-    const longitude = parseFloat(lng) || -74.006;
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+
+    // Strict coordinate validation — reject null, NaN, 0,0, and out-of-range values
+    if (
+      isNaN(latitude) || isNaN(longitude) ||
+      latitude < -90 || latitude > 90 ||
+      longitude < -180 || longitude > 180 ||
+      (latitude === 0 && longitude === 0)
+    ) {
+      return res.status(400).json({ message: 'Valid GPS coordinates (latitude and longitude) are required. Please use the "Use Current Location" button or enter coordinates manually.' });
+    }
     
     // Calculate total quantity for legacy field fallback
     const totalQuantity = parsedItems.reduce((acc, item) => acc + (Number(item.quantity) || 1), 0);

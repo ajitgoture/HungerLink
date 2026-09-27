@@ -32,10 +32,7 @@ const LocationPicker = ({
   const {
     t
   } = useTranslation();
-  const [currentPos, setCurrentPos] = useState(position || {
-    lat: 40.7128,
-    lng: -74.006
-  });
+  const [currentPos, setCurrentPos] = useState(position || null);
   const [locMsg, setLocMsg] = useState('');
   useEffect(() => {
     if (position) {
@@ -49,17 +46,30 @@ const LocationPicker = ({
   };
   const handleLocateUser = () => {
     if (navigator.geolocation) {
+      setLocMsg('Detecting your location...');
       navigator.geolocation.getCurrentPosition(pos => {
         const newPos = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude
         };
+        // Reject 0,0 coordinates
+        if (newPos.lat === 0 && newPos.lng === 0) {
+          setLocMsg('Invalid GPS coordinates. Please click the map to choose your location.');
+          return;
+        }
         handleSelectPos(newPos);
+        setLocMsg('');
       }, err => {
-        setLocMsg('Please click on the map to choose your pickup location.');
-      });
+        if (err.code === 1) setLocMsg('Permission denied. Click on the map to choose your pickup location.');
+        else if (err.code === 2) setLocMsg('Location unavailable. Click on the map to choose your pickup location.');
+        else setLocMsg('Location timed out. Click on the map to choose your pickup location.');
+      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+    } else {
+      setLocMsg('Geolocation not supported. Click on the map to choose your pickup location.');
     }
   };
+  // Default map center: India (not NYC!)
+  const mapCenter = currentPos ? [currentPos.lat, currentPos.lng] : [20.5937, 78.9629];
   return <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -76,9 +86,9 @@ const LocationPicker = ({
         </div>}
 
       <div className="h-64 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative z-0">
-        <MapContainer center={[currentPos.lat, currentPos.lng]} zoom={13} scrollWheelZoom={false} className="h-full w-full">
+        <MapContainer center={mapCenter} zoom={currentPos ? 15 : 5} scrollWheelZoom={false} className="h-full w-full">
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={[currentPos.lat, currentPos.lng]} />
+          {currentPos && <Marker position={[currentPos.lat, currentPos.lng]} />}
           <MapClickHandler setLocation={handleSelectPos} />
         </MapContainer>
       </div>
@@ -86,7 +96,7 @@ const LocationPicker = ({
       <div className="text-[11px] font-semibold text-slate-500 flex items-center justify-between px-1">
         <span>{t("Selected Coordinates:")}</span>
         <span className="font-mono text-teal-700">
-          {t("Lat:")} {currentPos.lat.toFixed(4)}{t(", Lng:")} {currentPos.lng.toFixed(4)}
+          {currentPos ? (currentPos.lat.toFixed(4) + ", " + currentPos.lng.toFixed(4)) : "No location selected yet"}
         </span>
       </div>
     </div>;
