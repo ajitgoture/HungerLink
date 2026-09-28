@@ -37,6 +37,26 @@ const DonationDetail = () => {
       try {
         const res = await api.get(`/${type}/donations/${id}`);
         setDonation(res.data);
+        
+        if (type !== 'food' && res.data.items) {
+          const initialItems = {};
+          res.data.items.forEach(item => {
+            if (item._id) initialItems[item._id] = item.quantity;
+          });
+          setRequestedClothItems(initialItems);
+        }
+        
+        // Fetch user's requests to see if they already requested this
+        if (user && !user.role.includes('Donor')) {
+          const reqs = await api.get(`/${type}/requests/receiver`);
+          const existing = reqs.data.find(r => 
+            (r.donation._id === id || r.donation === id) && 
+            ['PENDING', 'ACCEPTED'].includes(r.status)
+          );
+          if (existing) {
+            setMyRequestedIds(prev => new Set([...prev, id]));
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -102,6 +122,11 @@ const DonationDetail = () => {
           itemId,
           quantity: requestedClothItems[itemId]
         })).filter(i => i.quantity > 0);
+        
+        if (payload.requestedItems.length === 0) {
+          setRequesting(false);
+          return showToast('toastTitle_requestError', 'Please select at least one item to request.');
+        }
       }
       await api.post(`/${type}/requests`, payload);
       setMyRequestedIds(prev => new Set([...prev, donation._id]));

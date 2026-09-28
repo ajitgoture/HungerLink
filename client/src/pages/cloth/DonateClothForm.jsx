@@ -221,7 +221,7 @@ const DonateClothForm = () => {
       submitData.append('contactNumber', locationData.contactNumber);
 
       if (imageFile) {
-        submitData.append('clothImage', imageFile);
+        submitData.append('clothingImages', imageFile);
       }
 
       await api.post('/cloth/donations', submitData, {
