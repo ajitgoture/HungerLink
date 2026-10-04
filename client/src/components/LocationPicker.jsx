@@ -27,7 +27,8 @@ function MapClickHandler({
 }
 const LocationPicker = ({
   position,
-  setPosition
+  setPosition,
+  onCurrentLocation
 }) => {
   const {
     t
@@ -58,6 +59,7 @@ const LocationPicker = ({
           return;
         }
         handleSelectPos(newPos);
+        if (onCurrentLocation) onCurrentLocation(newPos);
         setLocMsg('');
       }, err => {
         if (err.code === 1) setLocMsg('Permission denied. Click on the map to choose your pickup location.');

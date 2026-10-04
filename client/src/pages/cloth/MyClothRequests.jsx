@@ -1,13 +1,14 @@
 import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, ArrowLeft, Phone, MapPin, Clock, Shirt, Heart } from 'lucide-react';
+import { ArrowLeft, Phone, MapPin, Clock, Shirt, Heart } from 'lucide-react';
 import api from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
 import ProgressTracker from '../../components/ProgressTracker';
+import ClickablePhoneNumber from '../../components/ClickablePhoneNumber';
 import ConnectedDetailsModal from '../../components/ConnectedDetailsModal';
 import LiveClothTrackingMap from '../../components/LiveClothTrackingMap';
-import { useNotifications } from '../../context/NotificationContext';
+import { TransferTimeline } from '../../components/TransferTimeline';
 import { useSocket } from '../../context/SocketContext';
 const MyClothRequests = () => {
   const { t, i18n } = useTranslation();
@@ -16,13 +17,8 @@ const MyClothRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeModalRequest, setActiveModalRequest] = useState(null);
-  const [confirmingId, setConfirmingId] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
   const [pendingReviews, setPendingReviews] = useState([]);
   const [rateModalData, setRateModalData] = useState(null);
-  const {
-    showToast
-  } = useNotifications();
   const fetchMyClothRequests = async () => {
     try {
       setLoading(true);
@@ -53,28 +49,21 @@ const MyClothRequests = () => {
     socket.on('CLOTH_REQUEST_NOT_SELECTED', handleStatusUpdate);
     socket.on('CLOTH_FALLBACK_ACCEPTED', handleStatusUpdate);
     socket.on('CLOTH_REQUESTED', handleStatusUpdate);
+    socket.on('TRANSFER_UPDATE', handleStatusUpdate);
+    socket.on('TRANSFER_METHOD_SET', handleStatusUpdate);
+    socket.on('HANDOVER_STARTED', handleStatusUpdate);
+    socket.on('QR_VERIFIED', handleStatusUpdate);
     return () => {
       socket.off('CLOTH_REQUEST_ACCEPTED', handleStatusUpdate);
       socket.off('CLOTH_REQUEST_NOT_SELECTED', handleStatusUpdate);
       socket.off('CLOTH_FALLBACK_ACCEPTED', handleStatusUpdate);
       socket.off('CLOTH_REQUESTED', handleStatusUpdate);
+      socket.off('TRANSFER_UPDATE', handleStatusUpdate);
+      socket.off('TRANSFER_METHOD_SET', handleStatusUpdate);
+      socket.off('HANDOVER_STARTED', handleStatusUpdate);
+      socket.off('QR_VERIFIED', handleStatusUpdate);
     };
   }, [socket]);
-  const handleConfirmReceived = async request => {
-    try {
-      setConfirmingId(request._id);
-      const {
-        data
-      } = await api.patch(`/cloth/requests/${request._id}/confirm-received`);
-      showToast('toastTitle_donationCompleted', data.message || t('toastMsg_theClothesDonationHasBeenCompletedSuccessfully'));
-      setSuccessMessage(data.message || 'Thank you! The clothes donation has been completed successfully.');
-      fetchMyClothRequests();
-    } catch (err) {
-      showToast('toastTitle_error', err.response?.data?.message ? t(err.response.data.message) : t('toastMsg_errorConfirmingClothesReception'));
-    } finally {
-      setConfirmingId(null);
-    }
-  };
   return <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         
@@ -93,20 +82,6 @@ const MyClothRequests = () => {
           </Link>
         </div>
 
-        {/* Global Success Banner */}
-        {successMessage && <div className="p-5 rounded-3xl bg-indigo-600 text-white shadow-xl flex items-center justify-between animate-fadeIn">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-7 h-7 text-indigo-200 flex-shrink-0" />
-              <div>
-                <h4 className="font-extrabold text-base">{t("Donation Complete!")}</h4>
-                <p className="text-xs text-indigo-100">{successMessage}</p>
-              </div>
-            </div>
-            <button onClick={() => setSuccessMessage('')} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 transition cursor-pointer">
-              {t("Dismiss")}
-            </button>
-          </div>}
-
         {/* Requests List */}
         {loading ? <div className="py-16 text-center text-slate-400">{t("Loading your clothes requests...")}</div> : requests.length === 0 ? <div className="py-16 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3">
             <Shirt className="w-12 h-12 text-slate-300 mx-auto" />
@@ -119,15 +94,26 @@ const MyClothRequests = () => {
             {requests.map(req => {
           const donation = req.donation;
           const donor = req.donor;
-          const isAccepted = ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ON_THE_WAY', 'ARRIVED', 'HANDOVER_PENDING', 'RECEIVED', 'COMPLETED'].includes(req.status);
-          const canConfirmReceived = ['ACCEPTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ON_THE_WAY', 'ARRIVED', 'HANDOVER_PENDING'].includes(req.status);
+          const isAccepted = ['ACCEPTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'TRACKING', 'APPROACHING', 'ARRIVED', 'HANDOVER_READY', 'QR_VERIFIED', 'COMPLETED'].includes(req.status);
           return <div key={req._id} className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6">
                   {/* Top Bar */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>
-                      <span className="text-xs font-bold text-slate-500">
-                        {t("Cloth Donor:")} <strong className="text-slate-900">{donor?.name || 'Cloth Donor'}</strong> ({donor?.city})
-                      </span>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs font-bold text-slate-500">
+                          {t("Cloth Donor:")} <strong className="text-slate-900">{donor?.name || 'Cloth Donor'}</strong> ({donor?.city})
+                        </span>
+                        {isAccepted && donor?.phone && (
+                          <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">
+                            <ClickablePhoneNumber 
+                              phone={donor.phone} 
+                              showIcon={true} 
+                              iconClassName="w-3.5 h-3.5 text-slate-600"
+                              textClassName="text-xs font-extrabold text-slate-700"
+                            />
+                          </div>
+                        )}
+                      </div>
                       <h3 className="text-xl font-black text-slate-900 mt-0.5">{donation?.clothingType || 'Clothing Item'}</h3>
                     </div>
                     <StatusBadge status={req.status} />
@@ -138,8 +124,10 @@ const MyClothRequests = () => {
 
                   {/* Live Location Map Component for Accepted Requests */}
                   {isAccepted && <div className="pt-2 border-t border-slate-100">
-                      <LiveClothTrackingMap donation={donation} isDonorView={false} />
+                      <LiveClothTrackingMap donation={donation} requestStatus={req.status} isDonorView={false} />
                     </div>}
+
+                  {isAccepted && <TransferTimeline donation={donation} isDonor={false} onUpdate={() => fetchMyClothRequests()} />}
 
                   {/* Action Bar */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
@@ -152,14 +140,15 @@ const MyClothRequests = () => {
 
                     <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                       {/* View Donor Contact & Map */}
+                      {req.status === 'COMPLETED' && pendingReviews.some(r => r._id === donation._id) && (
+                          <button type="button" onClick={() => setRateModalData(donation)} className="flex-1 sm:flex-none py-3 px-5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-extrabold text-xs border border-indigo-200 transition flex items-center justify-center gap-2 cursor-pointer">
+                            <Heart className="w-4 h-4" /> {t("Rate Donor")}
+                          </button>
+                        )}
                       {isAccepted && <button onClick={() => setActiveModalRequest(req)} className="flex-1 sm:flex-none py-3 px-5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-extrabold text-xs border border-indigo-200 transition flex items-center justify-center gap-2 cursor-pointer">
                           <Phone className="w-4 h-4" /> {t("View Donor Contact Details")}
                         </button>}
 
-                      {/* Confirm Clothes Received Button */}
-                      {canConfirmReceived && <button onClick={() => handleConfirmReceived(req)} disabled={confirmingId === req._id} className="flex-1 sm:flex-none py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-xs shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer">
-                          <CheckCircle2 className="w-4 h-4 stroke-[3]" /> {t("Confirm Clothes Received")}
-                        </button>}
                     </div>
                   </div>
                 </div>;
@@ -169,6 +158,18 @@ const MyClothRequests = () => {
         {/* Modal for Unlocked Connection Details */}
         {activeModalRequest && <ConnectedDetailsModal isOpen={!!activeModalRequest} onClose={() => setActiveModalRequest(null)} donation={activeModalRequest.donation} donor={activeModalRequest.donor} isDonorView={false} />}
 
+      {rateModalData && (
+        <RateModal
+          donation={rateModalData}
+          isOpen={!!rateModalData}
+          isDonorView={false}
+          onClose={() => setRateModalData(null)}
+          onReviewComplete={() => {
+            setRateModalData(null);
+            fetchMyRequests();
+          }}
+        />
+      )}
       </div>
     </div>;
 };

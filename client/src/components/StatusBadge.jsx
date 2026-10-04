@@ -15,9 +15,9 @@ const StatusBadge = ({ status }) => {
         return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'READY_FOR_PICKUP':
         return 'bg-indigo-100 text-indigo-800 border-indigo-300';
-      case 'OUT_FOR_DELIVERY':
+      case 'READY_FOR_DELIVERY':
         return 'bg-cyan-100 text-cyan-800 border-cyan-300';
-      case 'RECEIVED':
+      case 'QR_VERIFIED':
       case 'COMPLETED':
         return 'bg-teal-100 text-teal-800 border-teal-300';
       case 'REJECTED':

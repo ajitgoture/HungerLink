@@ -46,8 +46,13 @@ const userSchema = new mongoose.Schema(
       default: '',
     },
     location: {
-      lat: { type: Number, default: 40.7128 },
-      lng: { type: Number, default: -74.006 },
+      type: {
+        type: String,
+        enum: ['Point'],
+      },
+      coordinates: {
+        type: [Number],
+      }
     },
     profileImage: {
       type: String,
@@ -74,5 +79,7 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+userSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('User', userSchema);

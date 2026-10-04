@@ -21,9 +21,21 @@ const foodRequestSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    receiverLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+      },
+      coordinates: {
+        type: [Number],
+      }
+    },
     status: {
       type: String,
-      enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'NOT_SELECTED', 'RECEIVED', 'COMPLETED', 'EXPIRED'],
+      enum: [
+        'PENDING', 'ACCEPTED', 'REJECTED', 'NOT_SELECTED', 'RECEIVED', 'COMPLETED', 'EXPIRED',
+        'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'TRACKING', 'APPROACHING', 'ARRIVED', 'HANDOVER_READY', 'QR_VERIFIED', 'RECEIVER_CONFIRMED', 'CANCELLED'
+      ],
       default: 'PENDING',
     },
     requestedAt: {
@@ -51,5 +63,6 @@ const foodRequestSchema = new mongoose.Schema(
 );
 
 foodRequestSchema.index({ donation: 1, status: 1, requestedAt: 1 });
+foodRequestSchema.index({ receiverLocation: '2dsphere' });
 
 module.exports = mongoose.model('FoodRequest', foodRequestSchema);

@@ -121,23 +121,21 @@ const clothDonationSchema = new mongoose.Schema(
     approximateLocation: {
       city: { type: String, required: true },
       area: { type: String, default: '' },
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
     },
     preciseLocation: {
       address: { type: String, required: true },
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
     },
     location: {
       type: {
         type: String,
         enum: ['Point'],
-        default: 'Point',
       },
       coordinates: {
         type: [Number],
-        required: true,
       },
     },
     city: {
@@ -159,16 +157,18 @@ const clothDonationSchema = new mongoose.Schema(
         'AVAILABLE',
         'REQUESTED',
         'ACCEPTED',
-        'TRANSFER_METHOD_SELECTED',
         'READY_FOR_PICKUP',
-        'OUT_FOR_DELIVERY',
-          'ON_THE_WAY',
+        'READY_FOR_DELIVERY',
+        'TRACKING',
+        'APPROACHING',
         'ARRIVED',
-        'HANDOVER_PENDING',
-        'RECEIVED',
+        'HANDOVER_READY',
+        'QR_VERIFIED',
+        'RECEIVER_CONFIRMED',
         'COMPLETED',
+        'REJECTED',
         'CANCELLED',
-        'EXPIRED', // Kept for legacy
+        'EXPIRED'
       ],
       default: 'AVAILABLE',
     },

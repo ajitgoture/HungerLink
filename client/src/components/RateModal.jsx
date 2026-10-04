@@ -3,7 +3,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { ReviewForm } from './ReviewForm';
 
-export const RateModal = ({ donation, isOpen, onClose, onReviewComplete }) => {
+export const RateModal = ({ donation, isOpen, onClose, onReviewComplete, isDonorView }) => {
   const { t } = useTranslation();
 
   if (!isOpen || !donation) return null;
@@ -34,7 +34,7 @@ export const RateModal = ({ donation, isOpen, onClose, onReviewComplete }) => {
         <div className="p-6 overflow-y-auto">
           <ReviewForm 
             donation={donation} 
-            isDonor={donation.isCurrentUserDonor} 
+            isDonor={isDonorView ?? donation.isCurrentUserDonor} 
             onReviewComplete={() => {
               if (onReviewComplete) onReviewComplete();
               onClose();

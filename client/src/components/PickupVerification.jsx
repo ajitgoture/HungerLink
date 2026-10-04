@@ -18,15 +18,28 @@ const PickupVerification = ({ request, isDonorView, onUpdate }) => {
   const [pinInput, setPinInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // Eligible only when backend state is HANDOVER_PENDING
-  const isEligibleForHandover = donation.status === 'HANDOVER_PENDING';
+  // Eligible only when backend state is HANDOVER_READY
+  const isEligibleForHandover = donation.status === 'HANDOVER_READY';
   
+  
+  const handleStartHandover = async () => {
+    try {
+      const type = window.location.pathname.includes('cloth') ? 'cloth' : 'food';
+      const { data } = await api.patch(`/transfer/${type}/${donation._id || donation.id}/handover`, {});
+      if (onUpdate) onUpdate(data);
+    } catch (err) {
+      showToast('Error', err.response?.data?.message || 'Failed to start handover');
+    }
+  };
+
   const generateToken = async () => {
     try {
-      const res = await api.get(`/transfer/food/${donation._id}/handover-token`);
+      const type = window.location.pathname.includes('cloth') ? 'cloth' : 'food';
+      const res = await api.get(`/transfer/${type}/${donation._id || donation.id}/handover-token`);
       setTokenInfo(res.data);
     } catch (err) {
-      showToast('toastTitle_errorErrResponseDataMessageFailedToGenerateQr', 'toastMsg_error');
+      const message = err?.response?.data?.message || 'Failed to generate QR';
+      showToast('Error', message);
     }
   };
 
@@ -39,14 +52,15 @@ const PickupVerification = ({ request, isDonorView, onUpdate }) => {
       // Parse if it is JSON payload
       try {
         const parsed = JSON.parse(data);
-        if (parsed.token) tokenToVerify = parsed.token;
+        if (parsed.token) tokenToVerify = parsed;
       } catch (e) {
         tokenToVerify = data.replace(/[^0-9]/g, '').slice(0, 6);
       }
 
       await verifyToken(tokenToVerify);
     } catch (err) {
-      showToast('toastTitle_errorErrResponseDataMessageVerificationFailed', 'toastMsg_error');
+      const message = err?.response?.data?.message || 'Verification failed';
+      showToast('Error', message);
       setIsVerifying(false);
     }
   };
@@ -57,26 +71,34 @@ const PickupVerification = ({ request, isDonorView, onUpdate }) => {
       setIsVerifying(true);
       await verifyToken(pinInput);
     } catch (err) {
-      showToast('toastTitle_errorErrResponseDataMessageVerificationFailed', 'toastMsg_error');
+      const message = err?.response?.data?.message || 'Verification failed';
+      showToast('Error', message);
       setIsVerifying(false);
     }
   };
 
   const verifyToken = async (tokenString) => {
     // 1. Backend validates token & receiver
-    await api.post(`/transfer/food/${donation._id}/verify-handover`, { token: tokenString });
+    const res = await api.post(`/transfer/${window.location.pathname.includes('cloth') ? 'cloth' : 'food'}/${donation._id}/verify-handover`, { token: tokenString });
     
     // 2. Success message requested by user
-    showToast('Success', 'Food Handover Verified');
+    showToast('Success', 'Handover Verified');
     
-    // 3. Update existing request status (Completes handover)
-    const res = await api.patch(`/transfer/food/${donation._id}/complete`, {});
-    if (onUpdate) onUpdate(res.data);
-    
+    if (onUpdate) onUpdate(res.data.donation);
     setIsVerifying(false);
   };
 
-  if (!['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ARRIVED', 'HANDOVER_PENDING'].includes(donation.status)) {
+  const handleConfirmReceived = async () => {
+    try {
+      const res = await api.patch(`/transfer/${window.location.pathname.includes('cloth') ? 'cloth' : 'food'}/${donation._id}/complete`, {});
+      showToast('Success', 'Transfer Completed');
+      if (onUpdate) onUpdate(res.data);
+    } catch (err) {
+      showToast('Error', err.response?.data?.message || 'Failed to complete transfer');
+    }
+  };
+
+  if (!['ACCEPTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'TRACKING', 'ARRIVED', 'HANDOVER_READY', 'QR_VERIFIED'].includes(donation.status)) {
     return null; // Do not show for Available, Pending, Rejected, Cancelled, Expired, Completed
   }
 
@@ -110,7 +132,17 @@ const PickupVerification = ({ request, isDonorView, onUpdate }) => {
         {isDonorView ? (
           <>
             <p className="text-sm font-semibold text-slate-700 mb-3">{t("Pickup Status:")} <span className="text-emerald-600">{t(donation.status)}</span></p>
-            {isEligibleForHandover ? (
+            {donation.status === 'QR_VERIFIED' ? (
+              <div className="flex flex-col items-center gap-3 w-full">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-2">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">{t("QR Verified Successfully!")}</p>
+                <p className="text-xs text-slate-500 text-center max-w-[300px]">
+                  {t("Waiting for the receiver to confirm they have received the items.")}
+                </p>
+              </div>
+            ) : isEligibleForHandover ? (
               tokenInfo ? (
                 <div className="flex flex-col items-center space-y-3">
                   <div className="p-3 bg-white border border-emerald-100 shadow-sm rounded-xl">
@@ -124,6 +156,16 @@ const PickupVerification = ({ request, isDonorView, onUpdate }) => {
                   <QrCode className="w-4 h-4 mr-2" /> {t("Show QR Code")}
                 </Button>
               )
+            
+            ) : donation.status === 'ARRIVED' ? (
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-xs text-slate-500 text-center max-w-[300px]">
+                  {t("Both participants have arrived. You can now start the secure handover process.")}
+                </p>
+                <Button onClick={handleStartHandover} className="bg-indigo-600 hover:bg-indigo-700 w-full max-w-xs">
+                  {t("Start Handover")}
+                </Button>
+              </div>
             ) : (
               <p className="text-xs text-slate-500 text-center max-w-[300px]">
                 {t("QR Code will be available once the request progresses to the handover stage.")}
@@ -133,7 +175,20 @@ const PickupVerification = ({ request, isDonorView, onUpdate }) => {
         ) : (
           <>
             <p className="text-sm font-semibold text-slate-700 mb-3 text-center">{t("QR Verification Instructions")}</p>
-            {isEligibleForHandover ? (
+            {donation.status === 'QR_VERIFIED' ? (
+              <div className="flex flex-col items-center gap-3 w-full">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-2">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">{t("QR Verified Successfully!")}</p>
+                <p className="text-xs text-slate-500 text-center max-w-[300px] mb-2">
+                  {t("Please take the items. Confirm when you have received them.")}
+                </p>
+                <Button onClick={handleConfirmReceived} className="w-full bg-emerald-600 hover:bg-emerald-700 max-w-xs">
+                  <CheckCircle2 className="w-4 h-4 mr-2" /> {t("I Received the Donation")}
+                </Button>
+              </div>
+            ) : isEligibleForHandover ? (
               showScanner ? (
                 <QRScanner 
                   onScan={handleScan} 

@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const logout = () => {
+  function logout() {
     localStorage.removeItem('hungerlink_token');
     setToken('');
     setUser(null);

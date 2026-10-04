@@ -35,10 +35,9 @@ const MapView = ({ lat, lng, title, address, height = 'h-64' }) => {
   useEffect(() => {
     const fetchCoords = async () => {
       setLoading(true);
-      // Check if coordinates are valid and not the New York placeholder
-      const isPlaceholder = lat === 40.7128 && lng === -74.006;
       const hasValidCoords = typeof lat === 'number' && typeof lng === 'number' &&
-                             lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && !isPlaceholder;
+                             Number.isFinite(lat) && Number.isFinite(lng) &&
+                             lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
       
       if (hasValidCoords) {
         setResolvedPos([lat, lng]);

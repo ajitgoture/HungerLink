@@ -100,8 +100,6 @@ const ClothMapExplorer = () => {
               {donations.map(donation => {
             const loc = donation.approximateLocation;
             if (!loc || !loc.lat || !loc.lng) return null;
-            // Skip NYC placeholder coordinates
-            if (loc.lat === 40.7128 && loc.lng === -74.006) return null;
             if (loc.lat === 0 && loc.lng === 0) return null;
             return <Marker key={donation._id} position={[loc.lat, loc.lng]} icon={clothPinIcon}>
                     <Popup>

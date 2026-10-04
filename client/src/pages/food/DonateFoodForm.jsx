@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, MapPin, AlertCircle, Clock, Info, PlusCircle, Trash2, Navigation } from 'lucide-react';
+import LocationPicker from '../../components/LocationPicker';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -69,6 +70,23 @@ const UNIT_OPTIONS = [{
     showToast
   } = useNotifications();
 
+  const [formData, setFormData] = useState({
+    city: user?.city || '',
+    area: '',
+    pickupAddress: user?.address || '',
+    contactNumber: user?.phone || '',
+    packaging: 'Packed',
+    storageCondition: 'Room Temperature',
+    availableFrom: '',
+    lat: null,
+    lng: null,
+    safetyAcknowledged: false,
+  });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [errors, setErrors] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+
   // Redirect if not a donor
   React.useEffect(() => {
     if (user && !['Food Donor', 'donor'].includes(user.role)) {
@@ -96,85 +114,25 @@ const UNIT_OPTIONS = [{
   };
   // ────────────────────────────────────────────────────────────────────────────
 
-  const [formData, setFormData] = useState({
-    availableFrom: '',
-    city: user?.city || '',
-    area: '',
-    pickupAddress: user?.address || '',
-    // NO hardcoded default coordinates — null means "not yet set"
-    lat: null,
-    lng: null,
-    contactNumber: user?.phone || '',
-    packaging: 'Packed',
-    storageCondition: 'Room Temperature',
-    safetyAcknowledged: false
-  });
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState([]);
-  const [isLocating, setIsLocating] = useState(false);
-
-  // ─── GPS / USE CURRENT LOCATION ─────────────────────────────────────────────
-  const getUserLocation = () => {
-    if (!navigator.geolocation) {
-      showToast('Location Error', 'Geolocation is not supported by your browser.');
-      return;
+  const reverseGeocodePickup = async ({ lat, lng }) => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': i18n.language || 'en' }
+      });
+      if (!response.ok) return;
+      const result = await response.json();
+      const address = result.address || {};
+      setFormData(previous => ({
+        ...previous,
+        lat,
+        lng,
+        city: address.city || address.town || address.village || address.municipality || address.locality || previous.city,
+        area: address.suburb || address.neighbourhood || address.district || previous.area,
+        pickupAddress: result.display_name || previous.pickupAddress,
+      }));
+    } catch {
+      showToast('Location Error', 'Location coordinates were saved. Please complete the address manually.');
     }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        // Validate coordinates are not 0,0
-        if (lat === 0 && lng === 0) {
-          showToast('Location Error', 'Invalid GPS coordinates received. Please try again.');
-          setIsLocating(false);
-          return;
-        }
-        // Update lat/lng in form immediately
-        setFormData(prev => ({ ...prev, lat, lng }));
-        // Reverse geocode to fill city + address
-        try {
-          const resp = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-            { headers: { 'Accept-Language': 'en' } }
-          );
-          if (resp.ok) {
-            const data = await resp.json();
-            const addr = data.address || {};
-            const city = addr.city || addr.town || addr.village || addr.municipality || addr.county || '';
-            const fullAddress = data.display_name || '';
-            setFormData(prev => ({
-              ...prev,
-              lat,
-              lng,
-              city: city || prev.city,
-              pickupAddress: fullAddress || prev.pickupAddress,
-              area: addr.suburb || addr.neighbourhood || addr.district || prev.area || '',
-            }));
-            showToast('Location Detected', `Location set to ${city || 'your area'}`);
-          } else {
-            // Still save coords even if reverse geocoding fails
-            showToast('Location Saved', 'GPS coordinates saved. Please enter city manually.');
-          }
-        } catch {
-          showToast('Location Saved', 'GPS coordinates saved. Please enter city manually.');
-        }
-        setIsLocating(false);
-      },
-      (err) => {
-        setIsLocating(false);
-        if (err.code === 1) {
-          showToast('Permission Denied', 'Location permission was denied. Please allow location access or enter your location manually.');
-        } else if (err.code === 2) {
-          showToast('Location Unavailable', 'Location is currently unavailable. Please try again or enter manually.');
-        } else if (err.code === 3) {
-          showToast('Timeout', 'Location request timed out. Please try again.');
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
   };
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -185,7 +143,8 @@ const UNIT_OPTIONS = [{
     } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      ...(name === 'city' || name === 'area' || name === 'pickupAddress' ? { lat: null, lng: null } : {})
     }));
   };
   const handleImageChange = e => {
@@ -249,9 +208,7 @@ const UNIT_OPTIONS = [{
       }
     });
     // GPS coordinate validation — reject null/missing coordinates
-    if (formData.lat === null || formData.lng === null || isNaN(formData.lat) || isNaN(formData.lng)) {
-      validationErrors.push('GPS coordinates are required. Please click "Use Current Location" in Section 5 to set your actual pickup location.');
-    }
+    // GPS is optional at this stage
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       window.scrollTo({
@@ -262,12 +219,44 @@ const UNIT_OPTIONS = [{
     }
     try {
       setSubmitting(true);
+      
+      let finalLat = formData.lat;
+      let finalLng = formData.lng;
+
+      const hasCoordinates = Number.isFinite(Number(finalLat)) && Number.isFinite(Number(finalLng))
+        && finalLat !== null && finalLng !== null && !(Number(finalLat) === 0 && Number(finalLng) === 0);
+      if (!hasCoordinates) {
+        const addressStr = formData.pickupAddress.trim();
+        try {
+          const resp = addressStr
+            ? await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}`)
+            : null;
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data && data.length > 0) {
+              finalLat = parseFloat(data[0].lat);
+              finalLng = parseFloat(data[0].lon);
+            }
+          }
+        } catch (geocodingError) {
+          console.error("Geocoding failed", geocodingError);
+        }
+      }
+
+      const coordinatesAreValid = Number.isFinite(Number(finalLat)) && Number.isFinite(Number(finalLng))
+        && finalLat !== null && finalLng !== null && !(Number(finalLat) === 0 && Number(finalLng) === 0);
+      
       const submitData = new FormData();
 
       // Shared / non-item fields — simple append, no special cases needed
       Object.keys(formData).forEach(key => {
-        submitData.append(key, formData[key]);
+        if (key === 'lat' || key === 'lng') return;
+        else submitData.append(key, formData[key]);
       });
+      if (coordinatesAreValid) {
+        submitData.append('lat', Number(finalLat));
+        submitData.append('lng', Number(finalLng));
+      }
 
       // All items as JSON array — resolve customUnit before sending
       const resolveUnit = item => item.unit === 'Other' ? item.customUnit.trim() : item.unit;
@@ -450,37 +439,31 @@ const UNIT_OPTIONS = [{
 
           {/* SECTION 5: Location */}
           <Card>
-            <CardHeader><CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2"><MapPin className="w-5 h-5" /> {"5. Pickup Location"}</span>
-              <button
-                type="button"
-                onClick={getUserLocation}
-                disabled={isLocating}
-                className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white text-xs font-bold rounded-xl transition cursor-pointer"
-              >
-                <Navigation className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
-                {isLocating ? 'Detecting...' : 'Use Current Location'}
-              </button>
-            </CardTitle></CardHeader>
-            <CardContent className="space-y-5">
-              {/* Coordinate indicator */}
-              {formData.lat !== null && formData.lng !== null ? (
-                <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold">
-                  <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span>📍 GPS: {formData.lat.toFixed(5)}, {formData.lng.toFixed(5)}</span>
+            <CardHeader>
+              <CardTitle className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5" /> {t("5. Pickup Location")}
                 </div>
-              ) : (
-                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold">
-                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span>No GPS coordinates yet. Click "Use Current Location" or the map will not show your donation position.</span>
-                </div>
-              )}
+                <span className="text-sm text-slate-500 font-normal">{t("Choose how you want to provide your pickup location: use your current location, enter an address, or select a point on the map.")}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Input label={"City *"} name="city" value={formData.city} onChange={handleChange} required />
-                <Input label={"Neighborhood / Area"} name="area" value={formData.area} onChange={handleChange} />
+                <Input label={t("City *")} name="city" value={formData.city} onChange={handleChange} required />
+                <Input label={t("Neighborhood / Area")} name="area" value={formData.area} onChange={handleChange} />
               </div>
-              <Textarea label={"Precise Pickup Address *"} name="pickupAddress" value={formData.pickupAddress} onChange={handleChange} placeholder={"This will only be revealed to the receiver you accept."} rows={2} required />
-              <Input label={"Contact Number *"} name="contactNumber" value={formData.contactNumber} onChange={handleChange} required />
+              <Textarea label={t("Precise Pickup Address *")} name="pickupAddress" value={formData.pickupAddress} onChange={handleChange} placeholder={t("This will only be revealed to the receiver you accept.")} rows={2} required />
+              
+              <div className="pt-2 border-t border-slate-100">
+                <LocationPicker 
+                  position={formData.lat !== null && formData.lng !== null ? { lat: formData.lat, lng: formData.lng } : null}
+                  setPosition={(pos) => setFormData(prev => ({ ...prev, lat: pos.lat, lng: pos.lng }))}
+                  onCurrentLocation={reverseGeocodePickup}
+                />
+              </div>
+
+              <Input label={t("Contact Number *")} name="contactNumber" value={formData.contactNumber} onChange={handleChange} required />
             </CardContent>
           </Card>
 

@@ -8,21 +8,20 @@ export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user || !user._id) return;
+    const token = localStorage.getItem('token');
+    if (!user?._id || !token) {
+      if (socket.connected) socket.disconnect();
+      return;
+    }
 
     const joinRooms = () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        socket.emit('JOIN_USER_ROOM', { userId: user._id, token });
-        socket.emit('JOIN_ROLE_ROOM', { role: user.role, token });
-      }
+      socket.emit('JOIN_USER_ROOM', { userId: user._id, token });
+      socket.emit('JOIN_ROLE_ROOM', { role: user.role, token });
     };
 
-    // Join initially
-    joinRooms();
-
-    // Re-join on reconnect
     socket.on('connect', joinRooms);
+    if (socket.connected) joinRooms();
+    else socket.connect();
 
     return () => {
       socket.off('connect', joinRooms);

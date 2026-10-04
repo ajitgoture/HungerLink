@@ -33,8 +33,8 @@ exports.getSystemStats = async (req, res) => {
       ClothDonation.countDocuments({ status: 'COMPLETED', updatedAt: { $gte: today } }),
       FoodDonation.countDocuments({ status: 'EXPIRED', updatedAt: { $gte: today } }),
       ClothDonation.countDocuments({ status: 'EXPIRED', updatedAt: { $gte: today } }),
-      FoodDonation.countDocuments({ status: { $in: ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ARRIVED', 'HANDOVER_PENDING'] } }),
-      ClothDonation.countDocuments({ status: { $in: ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ARRIVED', 'HANDOVER_PENDING'] } })
+      FoodDonation.countDocuments({ status: { $in: ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'ARRIVED', 'HANDOVER_PENDING'] } }),
+      ClothDonation.countDocuments({ status: { $in: ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'ARRIVED', 'HANDOVER_PENDING'] } })
     ]);
 
     const now = new Date();
@@ -73,7 +73,7 @@ exports.getLiveOperations = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const activeDonations = await FoodDonation.find({
-      status: { $in: ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ARRIVED', 'HANDOVER_PENDING'] }
+      status: { $in: ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'ARRIVED', 'HANDOVER_PENDING'] }
     })
     .select('foodName status approximateLocation updatedAt donor acceptedReceiver')
     .populate('donor', 'name role')

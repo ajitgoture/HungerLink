@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, MapPin, AlertCircle, Clock, Trash2, PlusCircle } from 'lucide-react';
+import LocationPicker from '../../components/LocationPicker';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -29,7 +30,7 @@ const getSizeOptions = (category, type) => {
 };
 
 const DonateClothForm = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useNotifications();
@@ -49,9 +50,9 @@ const DonateClothForm = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  const [isLocating, setIsLocating] = useState(false);
   const [locationData, setLocationData] = useState({
     city: user?.city || '',
+    area: '',
     pickupAddress: user?.address || '',
     lat: null,   // No hardcoded default — must come from GPS or user input
     lng: null,
@@ -119,59 +120,24 @@ const DonateClothForm = () => {
     }
   };
 
-    const getUserLocation = () => {
-    if (navigator.geolocation) {
-      setIsLocating(true);
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-              headers: {
-                'Accept-Language': 'en'
-              }
-            });
-            const data = await response.json();
-            if (data && data.address) {
-              const addr = data.address;
-              const city = addr.city || addr.town || addr.village || addr.municipality || addr.locality || addr.county || "Unknown Location";
-              setLocationData({
-                city: city,
-                pickupAddress: data.display_name || city,
-                lat: lat,
-                lng: lng,
-              });
-              showToast("Location detected successfully", 'success');
-            } else {
-              setLocationData(prev => ({ ...prev, lat, lng }));
-              showToast("Unable to determine address from coordinates", 'error');
-            }
-          } catch (err) {
-            console.error("Reverse geocoding error:", err);
-            setLocationData(prev => ({ ...prev, lat, lng }));
-            showToast("Unable to determine address from coordinates", 'error');
-          } finally {
-            setIsLocating(false);
-          }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setIsLocating(false);
-          if (error.code === 1) {
-            showToast("Location permission was denied. Please allow location access or enter your location manually.", 'error');
-          } else if (error.code === 2) {
-            showToast("Location unavailable.", 'error');
-          } else if (error.code === 3) {
-            showToast("Location request timed out.", 'error');
-          } else {
-            showToast("Could not get your location. Please ensure location services are enabled.", 'error');
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
-    } else {
-      showToast("Geolocation is not supported by your browser", 'error');
+  const reverseGeocodePickup = async ({ lat, lng }) => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': i18n.language || 'en' }
+      });
+      if (!response.ok) return;
+      const result = await response.json();
+      const address = result.address || {};
+      setLocationData(previous => ({
+        ...previous,
+        lat,
+        lng,
+        city: address.city || address.town || address.village || address.municipality || address.locality || previous.city,
+        area: address.suburb || address.neighbourhood || address.district || previous.area,
+        pickupAddress: result.display_name || previous.pickupAddress,
+      }));
+    } catch {
+      showToast('Location Error', t('Location coordinates were saved. Please complete the address manually.'));
     }
   };
 
@@ -195,9 +161,7 @@ const DonateClothForm = () => {
     if (!locationData.city || !locationData.pickupAddress) {
       return setError("Pickup city and address are required");
     }
-    if (!locationData.lat || !locationData.lng) {
-      return setError('GPS coordinates are required. Please click "Use Current Location" to get your actual location.');
-    }
+    // GPS is optional
     if (!timelines.availableFrom) {
       return setError("Please specify when the clothes are available from");
     }
@@ -207,6 +171,32 @@ const DonateClothForm = () => {
 
     setLoading(true);
     try {
+      let finalLat = locationData.lat;
+      let finalLng = locationData.lng;
+      
+      const hasCoordinates = Number.isFinite(Number(finalLat)) && Number.isFinite(Number(finalLng))
+        && finalLat !== null && finalLng !== null && !(Number(finalLat) === 0 && Number(finalLng) === 0);
+      if (!hasCoordinates) {
+        const addressStr = locationData.pickupAddress.trim();
+        try {
+          const resp = addressStr
+            ? await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}`)
+            : null;
+          if (resp?.ok) {
+            const data = await resp.json();
+            if (data && data.length > 0) {
+              finalLat = parseFloat(data[0].lat);
+              finalLng = parseFloat(data[0].lon);
+            }
+          }
+        } catch (geocodingError) {
+          console.error("Geocoding failed", geocodingError);
+        }
+      }
+
+      const coordinatesAreValid = Number.isFinite(Number(finalLat)) && Number.isFinite(Number(finalLng))
+        && finalLat !== null && finalLng !== null && !(Number(finalLat) === 0 && Number(finalLng) === 0);
+      
       const submitData = new FormData();
       submitData.append('items', JSON.stringify(items));
       submitData.append('description', description);
@@ -214,9 +204,12 @@ const DonateClothForm = () => {
       submitData.append('pickupDate', timelines.pickupDate);
       submitData.append('pickupTimeWindow', timelines.pickupTimeWindow);
       submitData.append('city', locationData.city);
+      submitData.append('area', locationData.area);
       submitData.append('pickupAddress', locationData.pickupAddress);
-      submitData.append('lat', locationData.lat);
-      submitData.append('lng', locationData.lng);
+      if (coordinatesAreValid) {
+        submitData.append('lat', Number(finalLat));
+        submitData.append('lng', Number(finalLng));
+      }
       submitData.append('qualityAcknowledged', qualityAcknowledged);
       submitData.append('contactNumber', locationData.contactNumber);
 
@@ -416,15 +409,15 @@ const DonateClothForm = () => {
           {/* SECTION 3: LOCATION */}
           <Card>
             <CardHeader>
-              <CardTitle>{t("3. Location")}</CardTitle>
+              <CardTitle className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5" /> {t("3. Location")}
+                </div>
+                <span className="text-sm text-slate-500 font-normal">{t("Choose how you want to provide your pickup location: use your current location, enter an address, or select a point on the map.")}</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex justify-end">
-                <Button type="button" variant="outline" size="sm" onClick={getUserLocation} className="gap-2" disabled={isLocating}>
-                  <MapPin className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} /> {isLocating ? t("Detecting Location...") : t("Use Current Location")}
-                </Button>
-              </div>
-
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-slate-700">{t("City")} *</label>
@@ -432,19 +425,37 @@ const DonateClothForm = () => {
                     required
                     placeholder={t("e.g. Mumbai")}
                     value={locationData.city}
-                    onChange={(e) => setLocationData({ ...locationData, city: e.target.value })}
+                    onChange={(e) => setLocationData({ ...locationData, city: e.target.value, lat: null, lng: null })}
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">{t("Neighborhood / Area")}</label>
+                  <Input
+                    placeholder={t("Neighborhood / Area")}
+                    value={locationData.area}
+                    onChange={(e) => setLocationData({ ...locationData, area: e.target.value, lat: null, lng: null })}
+                  />
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
                   <label className="text-sm font-semibold text-slate-700">{t("Pickup Address")} *</label>
                   <Input
                     required
                     placeholder={t("Complete address or landmark")}
                     value={locationData.pickupAddress}
-                    onChange={(e) => setLocationData({ ...locationData, pickupAddress: e.target.value })}
+                    onChange={(e) => setLocationData({ ...locationData, pickupAddress: e.target.value, lat: null, lng: null })}
                   />
                 </div>
-                <div className="space-y-1.5 md:col-span-2">
+              </div>
+              
+              <div className="pt-2 border-t border-slate-100">
+                <LocationPicker 
+                  position={locationData.lat !== null && locationData.lng !== null ? { lat: locationData.lat, lng: locationData.lng } : null}
+                  setPosition={(pos) => setLocationData(previous => ({ ...previous, lat: pos.lat, lng: pos.lng }))}
+                  onCurrentLocation={reverseGeocodePickup}
+                />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2">
                   <label className="text-sm font-semibold text-slate-700">{t("Contact Number")} *</label>
                   <Input
                     required
@@ -453,7 +464,6 @@ const DonateClothForm = () => {
                     value={locationData.contactNumber}
                     onChange={(e) => setLocationData({ ...locationData, contactNumber: e.target.value })}
                   />
-                </div>
               </div>
             </CardContent>
           </Card>

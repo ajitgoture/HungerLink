@@ -26,8 +26,8 @@ const ClothReceiverDashboard = () => {
   }, []);
   const totalRequests = requests.length;
   const pendingRequests = requests.filter(r => r.status === 'PENDING').length;
-  const acceptedRequests = requests.filter(r => ['ACCEPTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(r.status)).length;
-  const completedRequests = requests.filter(r => ['RECEIVED', 'COMPLETED'].includes(r.status)).length;
+  const acceptedRequests = requests.filter(r => ['ACCEPTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY'].includes(r.status)).length;
+  const completedRequests = requests.filter(r => ['QR_VERIFIED', 'COMPLETED'].includes(r.status)).length;
   return <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         

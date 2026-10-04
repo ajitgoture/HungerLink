@@ -19,11 +19,23 @@ const clothRequestSchema = new mongoose.Schema(
     },
     requestedItems: [{
       itemId: { type: String, required: true },
-      quantity: { type: Number, required: true }
+      quantity: { type: Number, required: true },
     }],
+    receiverLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+      },
+      coordinates: {
+        type: [Number],
+      }
+    },
     status: {
       type: String,
-      enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'NOT_SELECTED', 'RECEIVED', 'COMPLETED', 'EXPIRED'],
+      enum: [
+        'PENDING', 'ACCEPTED', 'REJECTED', 'NOT_SELECTED', 'RECEIVED', 'COMPLETED', 'EXPIRED',
+        'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'TRACKING', 'APPROACHING', 'ARRIVED', 'HANDOVER_READY', 'QR_VERIFIED', 'RECEIVER_CONFIRMED', 'CANCELLED'
+      ],
       default: 'PENDING',
     },
     requestedAt: {
@@ -51,5 +63,6 @@ const clothRequestSchema = new mongoose.Schema(
 );
 
 clothRequestSchema.index({ donation: 1, status: 1, requestedAt: 1 });
+clothRequestSchema.index({ receiverLocation: '2dsphere' });
 
 module.exports = mongoose.model('ClothRequest', clothRequestSchema);

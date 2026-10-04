@@ -48,23 +48,21 @@ const foodDonationSchema = new mongoose.Schema(
     approximateLocation: {
       city: { type: String, required: true },
       area: { type: String, default: '' },
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
     },
     preciseLocation: {
       address: { type: String, required: true },
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
     },
     location: {
       type: {
         type: String,
         enum: ['Point'],
-        default: 'Point',
       },
       coordinates: {
         type: [Number],
-        required: true,
       },
     },
     description: {
@@ -121,17 +119,19 @@ const foodDonationSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-        'AVAILABLE', 
-        'REQUESTED', 
-        'ACCEPTED', 
-        'TRANSFER_METHOD_SELECTED',
-        'READY_FOR_PICKUP', 
-        'OUT_FOR_DELIVERY', 
-        'ON_THE_WAY',
+        'AVAILABLE',
+        'REQUESTED',
+        'ACCEPTED',
+        'READY_FOR_PICKUP',
+        'READY_FOR_DELIVERY',
+        'TRACKING',
+        'APPROACHING',
         'ARRIVED',
-        'HANDOVER_PENDING',
-        'RECEIVED', 
-        'COMPLETED', 
+        'HANDOVER_READY',
+        'QR_VERIFIED',
+        'RECEIVER_CONFIRMED',
+        'COMPLETED',
+        'REJECTED',
         'CANCELLED',
         'EXPIRED'
       ],

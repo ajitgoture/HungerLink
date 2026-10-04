@@ -25,9 +25,9 @@ export function StatusBadge({ status, className = '' }) {
       case 'REQUESTED': return 'warning';
       case 'ACCEPTED': return 'info';
       case 'READY_FOR_PICKUP':
-      case 'OUT_FOR_DELIVERY': return 'info';
+      case 'READY_FOR_DELIVERY': return 'info';
       case 'COMPLETED':
-      case 'RECEIVED': return 'success';
+      case 'QR_VERIFIED': return 'success';
       case 'EXPIRED': return 'destructive';
       default: return 'default';
     }

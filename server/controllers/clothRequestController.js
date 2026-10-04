@@ -6,9 +6,23 @@ const { attemptAtomicClothAcceptance } = require('../utils/clothFallbackSchedule
 // @route   POST /api/cloth/requests
 const createClothRequest = async (req, res) => {
   try {
-    const { donationId, donation: altDonationId } = req.body;
+    const { donationId, donation: altDonationId, lat, lng, accuracy } = req.body;
     const targetDonationId = donationId || altDonationId;
     const receiverId = req.user._id;
+
+    const { validateCoordinates } = require('../utils/locationValidator');
+    let receiverLocation = undefined;
+    if (lat !== undefined && lng !== undefined) {
+      if (!validateCoordinates(lat, lng)) {
+        return res.status(400).json({ message: 'Invalid GPS coordinates provided for request.' });
+      }
+      receiverLocation = {
+        type: 'Point',
+        coordinates: [Number(lng), Number(lat)],
+        accuracy: Number(accuracy) || 0,
+        timestamp: new Date()
+      };
+    }
 
     if (!req.user || !req.user.role || !req.user.role.toLowerCase().includes('receiver')) {
       return res.status(403).json({ message: 'Only authorized receivers can request clothes.' });
@@ -57,14 +71,20 @@ const createClothRequest = async (req, res) => {
       return res.status(400).json({ message: 'You have already requested this clothing donation.' });
     }
 
-    const request = await ClothRequest.create({
+    const requestData = {
       donation: targetDonationId,
       donor: donorId,
       receiver: receiverId,
       requestedItems: req.body.requestedItems || [],
       status: 'PENDING',
       requestedAt: now,
-    });
+    };
+
+    if (receiverLocation) {
+      requestData.receiverLocation = receiverLocation;
+    }
+
+    const request = await ClothRequest.create(requestData);
 
     if (donation.status === 'AVAILABLE') {
       donation.status = 'REQUESTED';
@@ -260,56 +280,9 @@ const confirmClothReceived = async (req, res) => {
     if (request.receiver.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only the accepted receiver can confirm clothes received' });
     }
-
-    const now = new Date();
-
-    request.status = 'COMPLETED';
-    request.receivedAt = now;
-    request.completedAt = now;
-    await request.save();
-
-    const donation = await ClothDonation.findById(request.donation._id);
-    if (donation) {
-      donation.status = 'COMPLETED';
-      donation.receivedAt = now;
-      donation.completedAt = now;
-      await donation.save();
-    }
-
-    // User-Friendly Notification for Donor
-    const completionNotifDonor = await Notification.create({
-      recipient: request.donor,
-      title: 'Donation Completed! ❤️',
-      message: `Your clothes donation "${donation.clothingType}" has been completed successfully.`,
-      type: 'CLOTH_DONATION_COMPLETED',
-      relatedDonation: donation._id,
-      relatedRequest: request._id,
-    });
-
-    // User-Friendly Notification for Receiver
-    const completionNotifReceiver = await Notification.create({
-      recipient: request.receiver,
-      title: 'Request Completed! ❤️',
-      message: `Your clothes request for "${donation.clothingType}" has been completed successfully.`,
-      type: 'CLOTH_DONATION_COMPLETED',
-      relatedDonation: donation._id,
-      relatedRequest: request._id,
-    });
-
-    const io = req.app.get('socketio');
-    if (io) {
-      io.to(`user_${request.donor.toString()}`).emit('CLOTH_DONATION_COMPLETED', {
-        notification: completionNotifDonor,
-        donationId: donation._id,
-      });
-      io.to(`user_${request.receiver.toString()}`).emit('notification:new', completionNotifReceiver);
-    }
-
-    res.json({
-      message: 'Thank you! The clothes donation has been completed successfully.',
-      request,
-      donation,
-    });
+    req.params.moduleType = 'cloth';
+    req.params.donationId = request.donation._id.toString();
+    return require('./transferController').completeTransfer(req, res);
   } catch (error) {
     console.error('Confirm clothes received error:', error);
     res.status(500).json({ message: 'Error confirming clothes received' });

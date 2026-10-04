@@ -32,6 +32,9 @@ export const ReviewForm = ({
     if (rating === 0) {
       return showToast('toastTitle_error', 'toastMsg_pleaseProvideAStarRating');
     }
+    const selectedCategories = Object.fromEntries(
+      Object.entries(categories).filter(([, score]) => score > 0)
+    );
     try {
       setIsSubmitting(true);
       await api.post('/reviews/submit', {
@@ -39,7 +42,7 @@ export const ReviewForm = ({
         moduleType: donation.moduleType || (donation.foodName ? 'food' : 'cloth'),
         revieweeId: isDonor ? (donation.acceptedReceiver?._id || donation.acceptedReceiver) : (donation.donor?._id || donation.donor),
         rating,
-        categories,
+        categories: selectedCategories,
         comment
       });
       showToast('toastTitle_success', 'toastMsg_thankYouForYourReview');

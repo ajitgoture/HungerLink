@@ -90,17 +90,17 @@ const createFoodDonation = async (req, res) => {
       imageUrl = req.body.imageUrl;
     }
 
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(lng);
-
-    // Strict coordinate validation — reject null, NaN, 0,0, and out-of-range values
-    if (
-      isNaN(latitude) || isNaN(longitude) ||
-      latitude < -90 || latitude > 90 ||
-      longitude < -180 || longitude > 180 ||
-      (latitude === 0 && longitude === 0)
-    ) {
-      return res.status(400).json({ message: 'Valid GPS coordinates (latitude and longitude) are required. Please use the "Use Current Location" button or enter coordinates manually.' });
+    const { validateCoordinates } = require('../utils/locationValidator');
+    const hasLatitude = lat !== undefined && lat !== null && String(lat).trim() !== '';
+    const hasLongitude = lng !== undefined && lng !== null && String(lng).trim() !== '';
+    if (hasLatitude !== hasLongitude) {
+      return res.status(400).json({ message: 'Provide both latitude and longitude, or neither.' });
+    }
+    const latitude = hasLatitude ? Number(lat) : null;
+    const longitude = hasLongitude ? Number(lng) : null;
+    const hasCoordinates = hasLatitude && validateCoordinates(latitude, longitude);
+    if (hasLatitude && !hasCoordinates) {
+      return res.status(400).json({ message: 'Valid GPS coordinates are required. Known fake, default, or invalid locations are not permitted.' });
     }
 
     const donation = await FoodDonation.create({
@@ -125,10 +125,10 @@ const createFoodDonation = async (req, res) => {
         lat: latitude,
         lng: longitude,
       },
-      location: {
+      ...(hasCoordinates && { location: {
         type: 'Point',
         coordinates: [longitude, latitude]
-      },
+      } }),
       city,
       description: description || firstItem.description || '',
       foodItems: parsedFoodItems,

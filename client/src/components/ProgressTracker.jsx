@@ -20,14 +20,23 @@ const ProgressTracker = ({ status }) => {
         return 0;
       case 'REQUESTED':
       case 'PENDING':
+      case 'CLAIMED':
         return 1;
       case 'ACCEPTED':
+      case 'CONFIRMED':
         return 2;
       case 'READY_FOR_PICKUP':
-      case 'OUT_FOR_DELIVERY':
+      case 'READY_FOR_DELIVERY':
+      case 'TRACKING':
+      case 'APPROACHING':
+      case 'ARRIVED':
+      case 'HANDOVER_READY':
         return 3;
-      case 'RECEIVED':
+      case 'QR_VERIFIED':
+      case 'RECEIVER_CONFIRMED':
       case 'COMPLETED':
+      case 'RECEIVED':
+      case 'DELIVERED':
         return 4;
       default:
         return 0;

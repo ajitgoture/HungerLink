@@ -19,9 +19,9 @@ const ConnectedDetailsModal = ({
   const address = donation.preciseLocation?.address || donation.approximateLocation?.city;
   const lat = donation.preciseLocation?.lat || donation.approximateLocation?.lat;
   const lng = donation.preciseLocation?.lng || donation.approximateLocation?.lng;
-  
-    const isPlaceholder = lat === 40.7128 && lng === -74.006;
-  const hasValidCoords = typeof lat === 'number' && typeof lng === 'number' && !isPlaceholder;
+  const hasValidCoords = typeof lat === 'number' && typeof lng === 'number'
+    && Number.isFinite(lat) && Number.isFinite(lng)
+    && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
   
   const userLat = user?.location?.coordinates?.[1];
   const userLng = user?.location?.coordinates?.[0];

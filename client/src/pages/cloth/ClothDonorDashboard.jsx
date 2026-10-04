@@ -28,8 +28,8 @@ const ClothDonorDashboard = () => {
   const pendingRequestsCount = requests.filter(r => r.status === 'PENDING').length;
   const acceptedCount = donations.filter(d => ['ACCEPTED'].includes(d.status)).length;
   const readyPickupCount = donations.filter(d => d.status === 'READY_FOR_PICKUP').length;
-  const outDeliveryCount = donations.filter(d => d.status === 'OUT_FOR_DELIVERY').length;
-  const completedCount = donations.filter(d => ['RECEIVED', 'COMPLETED'].includes(d.status)).length;
+  const outDeliveryCount = donations.filter(d => d.status === 'READY_FOR_DELIVERY').length;
+  const completedCount = donations.filter(d => ['QR_VERIFIED', 'COMPLETED'].includes(d.status)).length;
   return <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         

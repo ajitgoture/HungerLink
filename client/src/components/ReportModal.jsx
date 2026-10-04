@@ -31,7 +31,8 @@ export const ReportModal = ({
       showToast('toastTitle_success', 'toastMsg_reportSubmittedSuccessfullyThankYou');
       onClose();
     } catch (err) {
-      showToast('toastTitle_errorErrResponseDataMessageFailedToSubmitReport', 'toastMsg_error');
+      const message = err?.response?.data?.message || 'Failed to submit report';
+      showToast('Error', message);
     } finally {
       setIsSubmitting(false);
     }

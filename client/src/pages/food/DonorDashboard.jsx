@@ -26,8 +26,8 @@ const DonorDashboard = () => {
   const totalDonations = donations.length;
   const availableCount = donations.filter(d => d.status === 'AVAILABLE').length;
   const pendingRequestsCount = requests.filter(r => r.status === 'PENDING').length;
-  const acceptedCount = donations.filter(d => ['ACCEPTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(d.status)).length;
-  const completedCount = donations.filter(d => ['RECEIVED', 'COMPLETED'].includes(d.status)).length;
+  const acceptedCount = donations.filter(d => ['ACCEPTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY'].includes(d.status)).length;
+  const completedCount = donations.filter(d => ['QR_VERIFIED', 'COMPLETED'].includes(d.status)).length;
   return <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         

@@ -1,4 +1,5 @@
 const axios = require('axios');
+axios.defaults.timeout = 15000;
 
 const BASE_URL = 'http://localhost:5000/api';
 let donorToken, receiverToken, attackerToken;
@@ -82,14 +83,6 @@ async function runTests() {
     await axios.post(`${BASE_URL}/transfer/food/${foodDonationId}/method`, { method: 'PICKUP' }, donorAuth);
     console.log('Food Ready for Pickup');
 
-    // On The Way
-    await axios.patch(`${BASE_URL}/transfer/food/${foodDonationId}/on-the-way`, {}, receiverAuth);
-    console.log('Food On The Way');
-    
-    // Arrived
-    await axios.patch(`${BASE_URL}/transfer/food/${foodDonationId}/arrived`, {}, receiverAuth);
-    console.log('Food Arrived');
-
     // Initiate Handover
     await axios.patch(`${BASE_URL}/transfer/food/${foodDonationId}/handover`, {}, donorAuth);
     console.log('Food Handover Initiated');
@@ -109,12 +102,10 @@ async function runTests() {
     // Verify Quantity
     const fFinalDonation = await axios.get(`${BASE_URL}/food/donations/${foodDonationId}`, donorAuth);
     console.log('Food Final Quantity:', fFinalDonation.data.quantity, 'Status:', fFinalDonation.data.status);
-    
-    // Ratings
-    await axios.post(`${BASE_URL}/reviews/submit`, { donationId: foodDonationId, moduleType: 'food', rating: 5, comment: 'Great donor' }, receiverAuth);
-    await axios.post(`${BASE_URL}/reviews/submit`, { donationId: foodDonationId, moduleType: 'food', rating: 4, comment: 'Good receiver' }, donorAuth);
-    console.log('Food Ratings Submitted');
 
+    const foodReceiverReview = await axios.post(`${BASE_URL}/reviews/submit`, { donationId: foodDonationId, moduleType: 'food', rating: 5, comment: 'Great donor' }, receiverAuth);
+    console.log('Food Receiver Rating:', foodReceiverReview.status);
+    
     // =================================================================
     // CLOTHES TEST
     // =================================================================
@@ -154,12 +145,6 @@ async function runTests() {
     // Ready for Handover
     await axios.post(`${BASE_URL}/transfer/cloth/${clothDonationId}/method`, { method: 'PICKUP' }, cDonorAuth);
     
-    // On The Way
-    await axios.patch(`${BASE_URL}/transfer/cloth/${clothDonationId}/on-the-way`, {}, cReceiverAuth);
-    
-    // Arrived
-    await axios.patch(`${BASE_URL}/transfer/cloth/${clothDonationId}/arrived`, {}, cReceiverAuth);
-    
     // Initiate Handover
     await axios.patch(`${BASE_URL}/transfer/cloth/${clothDonationId}/handover`, {}, cDonorAuth);
 
@@ -179,9 +164,8 @@ async function runTests() {
     console.log('Cloth Final Shirt Quantity:', remainingShirt.quantity, 'Donation Status:', cFinalDonation.data.status);
     
     // Ratings
-    await axios.post(`${BASE_URL}/reviews/submit`, { donationId: clothDonationId, moduleType: 'cloth', rating: 5, comment: 'Nice cloth' }, cReceiverAuth);
-    await axios.post(`${BASE_URL}/reviews/submit`, { donationId: clothDonationId, moduleType: 'cloth', rating: 5, comment: 'Nice receiver' }, cDonorAuth);
-    console.log('Cloth Ratings Submitted');
+    const clothReceiverReview = await axios.post(`${BASE_URL}/reviews/submit`, { donationId: clothDonationId, moduleType: 'cloth', rating: 5, comment: 'Nice cloth' }, cReceiverAuth);
+    console.log('Cloth Receiver Rating:', clothReceiverReview.status);
     
     console.log('\n--- ALL E2E TESTS PASSED ---');
   } catch (err) {

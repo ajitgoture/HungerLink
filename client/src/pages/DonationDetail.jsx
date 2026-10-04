@@ -108,13 +108,37 @@ const DonationDetail = () => {
     };
   }, [type, id]);
 
+  const getReceiverLocation = () => new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error('Geolocation not supported.'));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+      (err) => reject(new Error(err.code === 1 ? 'Location permission denied.' : 'GPS signal lost or unavailable.')),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  });
+
   const handleRequest = async () => {
     if (user.role.includes('Donor')) {
       return showToast('toastTitle_roleRestriction', 'toastMsg_donorsCannotRequestItems');
     }
     try {
       setRequesting(true);
-      const payload = { donationId: donation._id };
+      
+      let locData = {};
+      try {
+        locData = await getReceiverLocation();
+      } catch (locErr) {
+        setRequesting(false);
+        return showToast('toastTitle_requestError', locErr.message);
+      }
+
+      const payload = { 
+        donationId: donation._id,
+        lat: locData.lat,
+        lng: locData.lng,
+        accuracy: locData.accuracy
+      };
+
       if (type === 'food') {
         payload.requestedQuantity = requestedQty;
       } else {

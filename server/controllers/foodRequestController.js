@@ -6,8 +6,22 @@ const { attemptAtomicAcceptance } = require('../utils/fallbackScheduler');
 // @route   POST /api/food/requests
 const createRequest = async (req, res) => {
   try {
-    const { donationId, requestedQuantity } = req.body;
+    const { donationId, requestedQuantity, lat, lng, accuracy } = req.body;
     const receiverId = req.user._id;
+
+    const { validateCoordinates } = require('../utils/locationValidator');
+    let receiverLocation = undefined;
+    if (lat !== undefined && lng !== undefined) {
+      if (!validateCoordinates(lat, lng)) {
+        return res.status(400).json({ message: 'Invalid GPS coordinates provided for request.' });
+      }
+      receiverLocation = {
+        type: 'Point',
+        coordinates: [Number(lng), Number(lat)],
+        accuracy: Number(accuracy) || 0,
+        timestamp: new Date()
+      };
+    }
 
     if (!req.user || !req.user.role || !req.user.role.toLowerCase().includes('receiver')) {
       return res.status(403).json({ message: 'Only authorized receivers can request donations.' });
@@ -49,14 +63,20 @@ const createRequest = async (req, res) => {
       return res.status(400).json({ message: 'You have already requested this food donation.' });
     }
 
-    const request = await FoodRequest.create({
+    const requestData = {
       donation: donationId,
       donor: donation.donor._id,
       receiver: receiverId,
       requestedQuantity: requestedQuantity || donation.quantity,
       status: 'PENDING',
       requestedAt: now,
-    });
+    };
+
+    if (receiverLocation) {
+      requestData.receiverLocation = receiverLocation;
+    }
+
+    const request = await FoodRequest.create(requestData);
 
     if (donation.status === 'AVAILABLE') {
       donation.status = 'REQUESTED';
@@ -96,8 +116,11 @@ const createRequest = async (req, res) => {
 
     res.status(201).json(request);
   } catch (error) {
-    console.error('Error creating request:', error.message);
-    res.status(500).json({ message: 'Server error submitting request' });
+    console.error('Error creating request:', error);
+    res.status(500).json({
+      message: 'Server error submitting request',
+      debug: error.message,
+    });
   }
 };
 
@@ -260,67 +283,9 @@ const confirmFoodReceived = async (req, res) => {
     if (request.receiver.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only the accepted receiver can confirm food received' });
     }
-
-    const now = new Date();
-
-    request.status = 'COMPLETED';
-    request.receivedAt = now;
-    request.completedAt = now;
-    await request.save();
-
-    const donation = await FoodDonation.findById(request.donation._id);
-    if (donation) {
-      if (request.requestedQuantity && request.requestedQuantity < donation.quantity) {
-          donation.quantity -= request.requestedQuantity;
-          donation.status = 'AVAILABLE';
-          donation.acceptedReceiver = null;
-          donation.handoverVerified = false;
-          donation.handoverToken = null;
-          donation.handoverTokenExpiry = null;
-          donation.receivedAt = null;
-          donation.completedAt = null;
-        } else {
-          donation.status = 'COMPLETED';
-          donation.receivedAt = now;
-          donation.completedAt = now;
-        }
-        await donation.save();
-    }
-
-    // User-Friendly Notification for Donor
-    const completionNotifDonor = await Notification.create({
-      recipient: request.donor,
-      title: 'Donation Completed! ❤️',
-      message: `Your food donation "${donation.foodName}" has been completed successfully.`,
-      type: 'DONATION_COMPLETED',
-      relatedDonation: donation._id,
-      relatedRequest: request._id,
-    });
-
-    // User-Friendly Notification for Receiver
-    const completionNotifReceiver = await Notification.create({
-      recipient: request.receiver,
-      title: 'Request Completed! ❤️',
-      message: `Your food request for "${donation.foodName}" has been completed successfully.`,
-      type: 'DONATION_COMPLETED',
-      relatedDonation: donation._id,
-      relatedRequest: request._id,
-    });
-
-    const io = req.app.get('socketio');
-    if (io) {
-      io.to(`user_${request.donor.toString()}`).emit('DONATION_COMPLETED', {
-        notification: completionNotifDonor,
-        donationId: donation._id,
-      });
-      io.to(`user_${request.receiver.toString()}`).emit('notification:new', completionNotifReceiver);
-    }
-
-    res.json({
-      message: 'Thank you! The food donation has been completed successfully.',
-      request,
-      donation,
-    });
+    req.params.moduleType = 'food';
+    req.params.donationId = request.donation._id.toString();
+    return require('./transferController').completeTransfer(req, res);
   } catch (error) {
     console.error('Confirm received error:', error);
     res.status(500).json({ message: 'Error confirming food received' });

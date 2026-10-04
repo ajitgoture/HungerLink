@@ -12,7 +12,7 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, phone, city, address, role } = req.body;
+    const { name, email, password, confirmPassword, phone, city, address, role, lat, lng, accuracy } = req.body;
 
     if (!name || !email || !password || !phone || !city) {
       return res.status(400).json({ message: 'Please fill in all required fields.' });
@@ -37,6 +37,20 @@ const registerUser = async (req, res) => {
       });
     }
 
+    const { validateCoordinates } = require('../utils/locationValidator');
+    let locationData;
+    if (lat !== undefined && lng !== undefined) {
+      if (!validateCoordinates(lat, lng)) {
+        return res.status(400).json({ message: 'Invalid GPS coordinates provided.' });
+      }
+        locationData = {
+          type: 'Point',
+          coordinates: [Number(lng), Number(lat)],
+          accuracy: Number(accuracy) || 0,
+          timestamp: new Date()
+        };
+    }
+
     const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
       return res.status(400).json({ message: 'An account with this email already exists.' });
@@ -53,6 +67,7 @@ const registerUser = async (req, res) => {
       city,
       address: address || '',
       role: role || 'Food Donor',
+      location: locationData
     });
 
     if (user) {
@@ -64,6 +79,7 @@ const registerUser = async (req, res) => {
         city: user.city,
         address: user.address,
         role: user.role,
+        location: user.location,
         token: generateToken(user._id),
       });
     } else {

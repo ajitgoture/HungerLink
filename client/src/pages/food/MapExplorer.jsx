@@ -58,9 +58,8 @@ const MapExplorer = () => {
               {donations.map(donation => {
             const lat = donation.approximateLocation?.lat;
             const lng = donation.approximateLocation?.lng;
-            // Skip markers with no coordinates, NYC placeholder, or 0,0
+            // Skip markers with missing or clearly invalid coordinates only.
             if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
-            if (lat === 40.7128 && lng === -74.006) return null;
             if (lat === 0 && lng === 0) return null;
             return <Marker key={donation._id} position={[lat, lng]}>
                     <Popup>

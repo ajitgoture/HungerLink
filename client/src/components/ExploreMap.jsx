@@ -92,9 +92,6 @@ const ExploreMap = ({ donations, userLocation, type, onRequest, requestedIds }) 
       // Must have valid coordinates
       if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) return;
       
-      const isPlaceholder = lat === 40.7128 && lng === -74.006;
-      if (isPlaceholder) return; // Do not show dummy New York markers on the explore map
-      
       const key = `${donorId}_${lat}_${lng}`;
       if (!groups[key]) {
         groups[key] = {

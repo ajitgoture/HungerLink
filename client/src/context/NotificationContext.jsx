@@ -53,7 +53,7 @@ export const NotificationProvider = ({ children }) => {
 
     const handleGenericNotification = (notif) => {
       if (notif) {
-        showToast(notif.title || 'Notification 🔔', notif.message);
+        showToast(notif.titleCode || notif.title || 'Notification', notif.messageCode || notif.message);
         fetchNotifications();
       }
     };
@@ -84,7 +84,6 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const handleTransferSet = (data) => {
-      showToast(data.notification?.title || 'Transfer Update', data.notification?.message || 'Item transfer status updated.');
       fetchNotifications();
     };
 

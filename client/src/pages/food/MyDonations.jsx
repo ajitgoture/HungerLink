@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, ArrowLeft, Clock, MapPin, CheckCircle2, Truck, User, Navigation } from 'lucide-react';
+import { PlusCircle, ArrowLeft, Clock, MapPin, CheckCircle2, Truck, User, Navigation, Heart } from 'lucide-react';
 import api from '../../services/api';
 import ClickablePhoneNumber from '../../components/ClickablePhoneNumber';
 import StatusBadge from '../../components/StatusBadge';
 import ProgressTracker from '../../components/ProgressTracker';
 import LiveTrackingMap from '../../components/LiveTrackingMap';
+import { TransferTimeline } from '../../components/TransferTimeline';
 import { RateModal } from '../../components/RateModal';
 import { useNotifications } from '../../context/NotificationContext';
 import { useSocket } from '../../context/SocketContext';
@@ -48,10 +49,18 @@ const MyDonations = () => {
     };
     socket.on('DONATION_EXPIRED', handleRefresh);
     socket.on('FOOD_REQUESTED', handleRefresh);
+    socket.on('TRANSFER_UPDATE', handleRefresh);
+    socket.on('TRANSFER_METHOD_SET', handleRefresh);
+    socket.on('HANDOVER_STARTED', handleRefresh);
+    socket.on('QR_VERIFIED', handleRefresh);
     socket.on('FALLBACK_ACCEPTED', handleRefresh);
     return () => {
       socket.off('DONATION_EXPIRED', handleRefresh);
       socket.off('FOOD_REQUESTED', handleRefresh);
+      socket.off('TRANSFER_UPDATE', handleRefresh);
+      socket.off('TRANSFER_METHOD_SET', handleRefresh);
+      socket.off('HANDOVER_STARTED', handleRefresh);
+      socket.off('QR_VERIFIED', handleRefresh);
       socket.off('FALLBACK_ACCEPTED', handleRefresh);
     };
   }, [socket]);
@@ -65,6 +74,8 @@ const MyDonations = () => {
       showToast('toastTitle_transferMethodSet', 'toastMsg_statusUpdatedToMethodPickupReadyForPickupOutForDelivery');
       fetchMyDonations();
     } catch (err) {
+      fetchMyDonations(); // Force resync to clear stale UI on error
+      fetchMyDonations(); // Force resync to clear stale UI on error
       showToast('toastTitle_error', err.response?.data?.message ? t(err.response.data.message) : t('toastMsg_errorSettingTransferMethod'));
     } finally {
       setUpdatingId(null);
@@ -103,7 +114,7 @@ const MyDonations = () => {
           </div> : <div className="space-y-8">
             {donations.map(donation => {
           const acceptedReceiver = donation.acceptedReceiver;
-          const isAccepted = ['ACCEPTED', 'TRANSFER_METHOD_SELECTED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'ON_THE_WAY', 'ARRIVED', 'HANDOVER_PENDING'].includes(donation.status);
+          const isAccepted = ['ACCEPTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'TRACKING', 'APPROACHING', 'ARRIVED', 'HANDOVER_READY'].includes(donation.status);
           return <div key={donation._id} className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>
@@ -143,8 +154,9 @@ const MyDonations = () => {
                       />
                     </div>}
 
-                  {/* Transfer Method Selector */}
+                    {/* Transfer Method Selector */}
                   {isAccepted && <div className="space-y-4 pt-3 border-t border-slate-100">
+                    {donation.status === 'ACCEPTED' && <>
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                         <div>
                           <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
@@ -158,20 +170,46 @@ const MyDonations = () => {
                             <CheckCircle2 className="w-3.5 h-3.5" /> {t("Ready for Pickup")}
                           </button>
 
-                          <button type="button" onClick={() => handleSetTransferMethod(donation._id, 'DELIVERY')} disabled={updatingId === donation._id} className={`py-2 px-4 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${donation.status === 'OUT_FOR_DELIVERY' ? 'bg-cyan-600 text-white shadow-md' : 'bg-white hover:bg-cyan-50 text-cyan-700 border border-cyan-200'}`}>
+                          <button type="button" onClick={() => handleSetTransferMethod(donation._id, 'DELIVERY')} disabled={updatingId === donation._id} className={`py-2 px-4 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${donation.status === 'READY_FOR_DELIVERY' ? 'bg-cyan-600 text-white shadow-md' : 'bg-white hover:bg-cyan-50 text-cyan-700 border border-cyan-200'}`}>
                             <Truck className="w-3.5 h-3.5" /> {t("Deliver Food")}
                           </button>
                         </div>
                       </div>
+                      </>}
 
+                      {donation.status === 'COMPLETED' && pendingReviews.some(r => r._id === donation._id) && (
+                        <div className="pt-3 border-t border-slate-100 flex justify-end">
+                          <button type="button" onClick={() => setRateModalData(donation)} className="py-2 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition flex items-center gap-2">
+                            <Heart className="w-4 h-4" /> {t("Rate Receiver")}
+                          </button>
+                        </div>
+                      )}
                       {/* Live Tracking Map Component */}
                       <LiveTrackingMap donation={donation} isDonorView={true} />
+                      {donation.status !== 'ACCEPTED' && <TransferTimeline
+                        donation={donation}
+                        isDonor={true}
+                        onUpdate={updated => setDonations(previous => previous.map(item => item._id === donation._id ? { ...item, ...updated } : item))}
+                      />}
                     </div>}
 
                 </div>;
         })}
           </div>}
 
+      {rateModalData && (
+        <RateModal
+          donation={rateModalData}
+          isOpen={!!rateModalData}
+          isDonorView={true}
+          isDonorView={true}
+          onClose={() => setRateModalData(null)}
+          onReviewComplete={() => {
+            setRateModalData(null);
+            fetchMyDonations();
+          }}
+        />
+      )}
       </div>
     </div>;
 };

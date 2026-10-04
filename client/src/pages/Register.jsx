@@ -67,7 +67,11 @@ const Register = () => {
         navigate(getDashboardRoute(role));
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      const errorMessage = err?.response?.data?.message ||
+        (err?.code === 'ERR_NETWORK'
+          ? 'Unable to reach the server. Please check that the backend is running.'
+          : err?.message || 'Registration failed. Please try again.');
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }

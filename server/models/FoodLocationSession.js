@@ -8,6 +8,11 @@ const foodLocationSessionSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    donationModel: { type: String, default: 'FoodDonation' },
+    request: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FoodRequest',
+    },
     donor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -18,19 +23,36 @@ const foodLocationSessionSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    transferMethod: {
-      type: String,
-      enum: ['PICKUP', 'DELIVERY', 'PENDING'],
-      default: 'PENDING',
+
+    // Handover Destination
+    handoverLocation: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
     },
-    donorSharing: {
-      type: Boolean,
-      default: false,
+
+    // Initial Start Points
+    donorStartLocation: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
     },
-    receiverSharing: {
-      type: Boolean,
-      default: false,
+    receiverStartLocation: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
     },
+
+    // Live Location Trackers (GeoJSON)
+    donorLiveLocation: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
+      heading: { type: Number },
+    },
+    receiverLiveLocation: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
+      heading: { type: Number },
+    },
+
+    // Legacy fallback fields
     donorLocation: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
@@ -45,16 +67,62 @@ const foodLocationSessionSchema = new mongoose.Schema(
       accuracy: { type: Number, default: 0 },
       updatedAt: { type: Date, default: null },
     },
-    startedAt: {
-      type: Date,
-      default: Date.now,
+    donorSharing: { type: Boolean, default: false },
+    receiverSharing: { type: Boolean, default: false },
+    proximityMilestones: { type: [String], default: [] },
+
+    // Tracking State
+    trackingMode: {
+      type: String,
+      enum: ['NONE', 'PICKUP', 'DELIVERY', 'PENDING'],
+      default: 'NONE',
     },
-    endedAt: {
-      type: Date,
-      default: null,
+    transferMethod: {
+      type: String,
+      enum: ['NONE', 'PICKUP', 'DELIVERY', 'PENDING'],
+      default: 'PENDING',
     },
+    trackingStatus: {
+      type: String,
+      enum: ['WAITING', 'ACTIVE', 'PAUSED', 'ARRIVED', 'COMPLETED', 'CANCELLED'],
+      default: 'WAITING'
+    },
+
+    distanceRemaining: { type: Number, default: null },
+    etaSeconds: { type: Number, default: null },
+
+    donorArrived: { type: Boolean, default: false },
+    receiverArrived: { type: Boolean, default: false },
+    donorArrivedAt: { type: Date, default: null },
+    receiverArrivedAt: { type: Date, default: null },
+
+    handoverStatus: {
+      type: String,
+      enum: ['PENDING', 'INITIATED', 'VERIFIED', 'FAILED'],
+      default: 'PENDING'
+    },
+    qrVerificationStatus: {
+      type: String,
+      enum: ['PENDING', 'VERIFIED', 'BYPASSED', 'FAILED'],
+      default: 'PENDING'
+    },
+    receiverConfirmationStatus: {
+      type: String,
+      enum: ['PENDING', 'CONFIRMED'],
+      default: 'PENDING'
+    },
+
+    lastLocationUpdate: { type: Date, default: Date.now },
+    startedAt: { type: Date, default: null },
+    completedAt: { type: Date, default: null },
+    endedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
+
+// Indexes
+foodLocationSessionSchema.index({ 'donorLiveLocation': '2dsphere' });
+foodLocationSessionSchema.index({ 'receiverLiveLocation': '2dsphere' });
+foodLocationSessionSchema.index({ 'handoverLocation': '2dsphere' });
 
 module.exports = mongoose.model('FoodLocationSession', foodLocationSessionSchema);

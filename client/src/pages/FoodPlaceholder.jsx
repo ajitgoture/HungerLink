@@ -31,7 +31,7 @@ const FoodPlaceholder = () => {
             <li>{t("Post surplus cooked/packaged meals with Veg/Non-Veg tags")}</li>
             <li>{t("Real-time receiver requests with instant donor alerts")}</li>
             <li>{t("Distance calculations & exact pickup location privacy release")}</li>
-            <li>{t("Status flow: AVAILABLE → ACCEPTED → RECEIVED → COMPLETED")}</li>
+            <li>{t("Status flow: AVAILABLE → ACCEPTED → QR_VERIFIED → COMPLETED")}</li>
           </ul>
         </div>
 
