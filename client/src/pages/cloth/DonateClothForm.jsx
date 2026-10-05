@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { compressImage } from "../../utils/imageCompressor";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, MapPin, AlertCircle, Clock, Trash2, PlusCircle } from 'lucide-react';
@@ -132,9 +133,9 @@ const DonateClothForm = () => {
         ...previous,
         lat,
         lng,
-        city: address.city || address.town || address.village || address.municipality || address.locality || previous.city,
-        area: address.suburb || address.neighbourhood || address.district || previous.area,
-        pickupAddress: result.display_name || previous.pickupAddress,
+        city: address.city || address.town || address.village || address.municipality || address.locality || address.city_district || address.county || '',
+        area: address.suburb || address.neighbourhood || address.district || '',
+        pickupAddress: result.display_name || '',
       }));
     } catch {
       showToast('Location Error', t('Location coordinates were saved. Please complete the address manually.'));
@@ -179,8 +180,14 @@ const DonateClothForm = () => {
       if (!hasCoordinates) {
         const addressStr = locationData.pickupAddress.trim();
         try {
+          const fetchWithTimeout = (url, options, timeout = 3000) => {
+            return Promise.race([
+              fetch(url, options),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeout))
+            ]);
+          };
           const resp = addressStr
-            ? await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}`)
+            ? await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}`, {})
             : null;
           if (resp?.ok) {
             const data = await resp.json();
@@ -451,7 +458,7 @@ const DonateClothForm = () => {
                 <LocationPicker 
                   position={locationData.lat !== null && locationData.lng !== null ? { lat: locationData.lat, lng: locationData.lng } : null}
                   setPosition={(pos) => setLocationData(previous => ({ ...previous, lat: pos.lat, lng: pos.lng }))}
-                  onCurrentLocation={reverseGeocodePickup}
+                  onPositionSelected={reverseGeocodePickup}
                 />
               </div>
 

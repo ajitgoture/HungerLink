@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { compressImage } from "../../utils/imageCompressor";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, MapPin, AlertCircle, Clock, Info, PlusCircle, Trash2, Navigation } from 'lucide-react';
@@ -126,9 +127,9 @@ const UNIT_OPTIONS = [{
         ...previous,
         lat,
         lng,
-        city: address.city || address.town || address.village || address.municipality || address.locality || previous.city,
-        area: address.suburb || address.neighbourhood || address.district || previous.area,
-        pickupAddress: result.display_name || previous.pickupAddress,
+        city: address.city || address.town || address.village || address.municipality || address.locality || address.city_district || address.county || '',
+        area: address.suburb || address.neighbourhood || address.district || '',
+        pickupAddress: result.display_name || '',
       }));
     } catch {
       showToast('Location Error', 'Location coordinates were saved. Please complete the address manually.');
@@ -228,8 +229,14 @@ const UNIT_OPTIONS = [{
       if (!hasCoordinates) {
         const addressStr = formData.pickupAddress.trim();
         try {
+          const fetchWithTimeout = (url, options, timeout = 3000) => {
+            return Promise.race([
+              fetch(url, options),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeout))
+            ]);
+          };
           const resp = addressStr
-            ? await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}`)
+            ? await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}`, {})
             : null;
           if (resp.ok) {
             const data = await resp.json();
@@ -266,7 +273,14 @@ const UNIT_OPTIONS = [{
         customUnit: undefined
       }));
       submitData.append('foodItems', JSON.stringify(serializedItems));
-      if (imageFile) submitData.append('foodImage', imageFile);
+      if (imageFile) {
+        try {
+          const compressed = await compressImage(imageFile);
+          submitData.append('foodImage', compressed);
+        } catch (e) {
+          submitData.append('foodImage', imageFile);
+        }
+      }
       await api.post('/food/donations', submitData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -459,7 +473,7 @@ const UNIT_OPTIONS = [{
                 <LocationPicker 
                   position={formData.lat !== null && formData.lng !== null ? { lat: formData.lat, lng: formData.lng } : null}
                   setPosition={(pos) => setFormData(prev => ({ ...prev, lat: pos.lat, lng: pos.lng }))}
-                  onCurrentLocation={reverseGeocodePickup}
+                  onPositionSelected={reverseGeocodePickup}
                 />
               </div>
 

@@ -9,20 +9,35 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchMe = async () => {
       if (token) {
         try {
-          const { data } = await api.get('/auth/me');
-          setUser(data);
+          const { data } = await api.get('/auth/me', { timeout: 15000 });
+          if (isActive) {
+            setUser(data);
+          }
         } catch (error) {
-          console.error('Failed to fetch authenticated user:', error);
-          logout();
+          if (isActive) {
+            console.error('Failed to fetch authenticated user:', error);
+            logout();
+          }
+        } finally {
+          if (isActive) {
+            setLoading(false);
+          }
         }
+      } else if (isActive) {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchMe();
+
+    return () => {
+      isActive = false;
+    };
   }, [token]);
 
   const login = async (email, password) => {

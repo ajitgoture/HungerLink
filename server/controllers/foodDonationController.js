@@ -147,7 +147,7 @@ const createFoodDonation = async (req, res) => {
     const donorNotif = await Notification.create({
       recipient: req.user._id,
       title: 'Donation Posted 🍲',
-      message: `Your food donation "${foodName}" has been posted successfully.`,
+      message: `Your food donation "${effectiveFoodName}" has been posted successfully.`,
       type: 'FOOD_DONATION_POSTED',
       relatedDonation: donation._id,
     });

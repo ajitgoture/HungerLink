@@ -1,16 +1,42 @@
 import { useTranslation } from "react-i18next";
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Bell, CheckCheck, Inbox } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 const NotificationDropdown = () => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const {
     notifications,
     unreadCount,
     markAllRead
   } = useNotifications();
-  return <div className="relative">
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event) => {
+      if (!dropdownRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return <div className="relative" ref={dropdownRef}>
       <button onClick={() => setIsOpen(!isOpen)} className="relative p-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition focus:outline-none" aria-label={t("Notifications")}>
         <Bell className="w-5 h-5 text-slate-700" />
         {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center border-2 border-white animate-pulse">
