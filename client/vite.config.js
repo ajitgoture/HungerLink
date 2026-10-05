@@ -1,9 +1,34 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const clientDir = dirname(fileURLToPath(import.meta.url));
+const certificatePath = resolve(clientDir, '.cert', 'lan-cert.pem');
+const privateKeyPath = resolve(clientDir, '.cert', 'lan-key.pem');
+const httpsOptions = existsSync(certificatePath) && existsSync(privateKeyPath)
+  ? { cert: readFileSync(certificatePath), key: readFileSync(privateKeyPath) }
+  : undefined;
+
 export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    https: httpsOptions,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+        ws: true,
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

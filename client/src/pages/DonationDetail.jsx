@@ -127,17 +127,19 @@ const DonationDetail = () => {
       let locData = {};
       try {
         locData = await getReceiverLocation();
-      } catch (locErr) {
-        setRequesting(false);
-        return showToast('toastTitle_requestError', locErr.message);
+      } catch {
+        // GPS is optional for requesting; live tracking can begin when coordinates are available.
       }
 
       const payload = { 
         donationId: donation._id,
-        lat: locData.lat,
-        lng: locData.lng,
-        accuracy: locData.accuracy
       };
+
+      if (Number.isFinite(locData.lat) && Number.isFinite(locData.lng)) {
+        payload.lat = locData.lat;
+        payload.lng = locData.lng;
+        payload.accuracy = locData.accuracy;
+      }
 
       if (type === 'food') {
         payload.requestedQuantity = requestedQty;
@@ -182,6 +184,7 @@ const DonationDetail = () => {
   }
 
   const isFood = type === 'food';
+  const donationImage = donation.imageUrl || donation.imageUrls?.[0] || donation.images?.[0];
   const isAvailable = donation.status === 'AVAILABLE';
   const isAlreadyRequested = myRequestedIds.has(donation._id) || (donation.requests && donation.requests.some(req => req.receiver === user?._id && req.status === 'PENDING'));
 
@@ -208,8 +211,8 @@ const DonationDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm">
               <div className="h-64 bg-slate-100 relative">
-                {donation.images && donation.images.length > 0 ? (
-                  <img src={donation.images[0]} alt={t("Donation")} className="w-full h-full object-cover" />
+                {donationImage ? (
+                  <img src={donationImage} alt={isFood ? donation.foodName || t("Donation") : t("Donation")} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-300">
                     <PackageCheck className="w-16 h-16" />

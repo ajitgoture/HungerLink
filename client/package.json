@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+    "setup:https": "powershell -ExecutionPolicy Bypass -File scripts/setup-local-https.ps1",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"

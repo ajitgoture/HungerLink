@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const FoodDonation = require('../models/FoodDonation');
 const FoodRequest = require('../models/FoodRequest');
 const Notification = require('../models/Notification');
@@ -123,6 +124,10 @@ const attemptAtomicAcceptance = async (donationId, receiverId, isFallback = fals
  * Background Scheduler Worker for Overdue Deadlines & Expiries
  */
 const runFallbackCheck = async (io) => {
+  if (mongoose.connection.readyState !== 1) {
+    return;
+  }
+
   try {
     const now = new Date();
 

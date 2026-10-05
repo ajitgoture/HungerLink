@@ -16,6 +16,7 @@ const MyDonations = () => {
   
   
   const [donations, setDonations] = useState([]);
+  const [donorRequests, setDonorRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const { showToast } = useNotifications();
@@ -26,6 +27,12 @@ const MyDonations = () => {
       setLoading(true);
       const { data } = await api.get('/food/donations/my-donations');
       setDonations(data || []);
+      try {
+        const { data: requestData } = await api.get('/food/requests/donor');
+        setDonorRequests(requestData || []);
+      } catch (e) {
+        setDonorRequests([]);
+      }
       try {
         const revRes = await api.get('/reviews/pending');
         setPendingReviews(revRes.data || []);
@@ -114,6 +121,16 @@ const MyDonations = () => {
           </div> : <div className="space-y-8">
             {donations.map(donation => {
           const acceptedReceiver = donation.acceptedReceiver;
+          const completedTransfers = donorRequests.filter(request => {
+            const requestDonationId = request.donation?._id || request.donation;
+            return request.status === 'COMPLETED' && requestDonationId?.toString() === donation._id.toString();
+          });
+          const latestCompletedTransfer = completedTransfers.reduce((latest, request) => {
+            if (!latest) return request;
+            return new Date(request.completedAt || request.updatedAt) > new Date(latest.completedAt || latest.updatedAt)
+              ? request
+              : latest;
+          }, null);
           const isAccepted = ['ACCEPTED', 'READY_FOR_PICKUP', 'READY_FOR_DELIVERY', 'TRACKING', 'APPROACHING', 'ARRIVED', 'HANDOVER_READY'].includes(donation.status);
           return <div key={donation._id} className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -134,6 +151,23 @@ const MyDonations = () => {
 
                   {/* Stepper */}
                   <ProgressTracker status={donation.status} />
+
+                  {completedTransfers.length > 0 && (
+                    <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <div className="text-xs">
+                        <p className="font-bold">
+                          {completedTransfers.length} {t(completedTransfers.length === 1 ? "completed transfer" : "completed transfers")}
+                          {latestCompletedTransfer?.receiver?.name && ` · ${latestCompletedTransfer.receiver.name}`}
+                        </p>
+                        {donation.quantity > 0 && (
+                          <p className="mt-1 text-emerald-800">
+                            {t("Remaining quantity available:")} {donation.quantity} {donation.unit}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Accepted Receiver Info */}
                   {acceptedReceiver && <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 text-xs flex items-center justify-between">

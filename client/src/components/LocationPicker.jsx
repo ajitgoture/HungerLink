@@ -46,6 +46,10 @@ const LocationPicker = ({
     setLocMsg('');
   };
   const handleLocateUser = () => {
+    if (!globalThis.isSecureContext) {
+      setLocMsg('Precise location requires HTTPS or localhost. Open this app using a secure address, then allow location access.');
+      return;
+    }
     if (navigator.geolocation) {
       setLocMsg('Detecting your location...');
       navigator.geolocation.getCurrentPosition(pos => {
@@ -62,10 +66,10 @@ const LocationPicker = ({
         if (onCurrentLocation) onCurrentLocation(newPos);
         setLocMsg('');
       }, err => {
-        if (err.code === 1) setLocMsg('Permission denied. Click on the map to choose your pickup location.');
+        if (err.code === 1) setLocMsg('Location permission denied. Allow location access for this site in your browser settings, then try again.');
         else if (err.code === 2) setLocMsg('Location unavailable. Click on the map to choose your pickup location.');
         else setLocMsg('Location timed out. Click on the map to choose your pickup location.');
-      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+      }, { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
     } else {
       setLocMsg('Geolocation not supported. Click on the map to choose your pickup location.');
     }
