@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import { MapPin, Navigation, Search } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -25,26 +25,60 @@ function MapClickHandler({
   });
   return null;
 }
+function SelectedLocationView({ position }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (position) {
+      map.setView([position.lat, position.lng], Math.max(map.getZoom(), 15));
+    }
+  }, [map, position]);
+
+  return null;
+}
 const LocationPicker = ({
   position,
   setPosition,
-  onCurrentLocation
+  onPositionSelected
 }) => {
   const {
     t
   } = useTranslation();
   const [currentPos, setCurrentPos] = useState(position || null);
   const [locMsg, setLocMsg] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   useEffect(() => {
-    if (position) {
-      setCurrentPos(position);
-    }
+    setCurrentPos(position || null);
   }, [position]);
   const handleSelectPos = newPos => {
     setCurrentPos(newPos);
     setPosition(newPos);
     setLocMsg('');
+    onPositionSelected?.(newPos);
   };
+  
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    setLocMsg('Searching...');
+    try {
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.length > 0) {
+          const newPos = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+          handleSelectPos(newPos);
+        } else {
+          setLocMsg(t("Location not found. Please try a different search term."));
+        }
+      }
+    } catch (err) {
+      setLocMsg(t("Search failed. Please click on the map."));
+    }
+  };
+
   const handleLocateUser = () => {
     if (!globalThis.isSecureContext) {
       setLocMsg('Precise location requires HTTPS or localhost. Open this app using a secure address, then allow location access.');
@@ -63,7 +97,6 @@ const LocationPicker = ({
           return;
         }
         handleSelectPos(newPos);
-        if (onCurrentLocation) onCurrentLocation(newPos);
         setLocMsg('');
       }, err => {
         if (err.code === 1) setLocMsg('Location permission denied. Allow location access for this site in your browser settings, then try again.');
@@ -87,6 +120,19 @@ const LocationPicker = ({
         </button>
       </div>
 
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <input 
+          type="text" 
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder={t("Search for a city or area...")}
+          className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+        />
+        <button type="submit" className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl border border-slate-300 transition flex items-center cursor-pointer">
+          <Search className="w-4 h-4" />
+        </button>
+      </form>
+
       {locMsg && <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
           {locMsg}
         </div>}
@@ -95,6 +141,7 @@ const LocationPicker = ({
         <MapContainer center={mapCenter} zoom={currentPos ? 15 : 5} scrollWheelZoom={false} className="h-full w-full">
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {currentPos && <Marker position={[currentPos.lat, currentPos.lng]} />}
+          <SelectedLocationView position={currentPos} />
           <MapClickHandler setLocation={handleSelectPos} />
         </MapContainer>
       </div>
