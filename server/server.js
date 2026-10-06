@@ -9,6 +9,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const setupSocketIO = require('./sockets/socketHandler');
 const { runFallbackCheck } = require('./utils/fallbackScheduler');
@@ -115,7 +116,23 @@ app.get('/', (req, res) => {
 
 // Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'HungerLink Backend API Running (Food & Clothes Modules Active)' });
+  const databaseConnected = mongoose.connection.readyState === 1;
+  res.status(databaseConnected ? 200 : 503).json({
+    status: databaseConnected ? 'OK' : 'DEGRADED',
+    database: databaseConnected ? 'connected' : 'disconnected',
+    message: databaseConnected
+      ? 'HungerLink Backend API Running (Food & Clothes Modules Active)'
+      : 'The database is temporarily unavailable. Please try again shortly.',
+  });
+});
+
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: 'The database is temporarily unavailable. Please try again shortly.',
+    });
+  }
+  next();
 });
 
 // API Routes - Food

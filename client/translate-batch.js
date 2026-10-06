@@ -14,7 +14,7 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 async function run() {
   for (const lang of languages) {
     let existing = {};
-    const filePath = path.join(localesDir, ${lang}.json);
+    const filePath = path.join(localesDir, `${lang}.json`);
     if (fs.existsSync(filePath)) {
       existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
@@ -25,7 +25,7 @@ async function run() {
     if (lang === 'en') {
       missingStrings.forEach(s => result[s] = s);
     } else {
-      console.log(Translating  strings to ...);
+      console.log(`Translating ${missingStrings.length} strings to ${lang}...`);
       const CHUNK_SIZE = 25;
       
       for (let i = 0; i < missingStrings.length; i += CHUNK_SIZE) {
@@ -39,9 +39,9 @@ async function run() {
             chunk.forEach((text, idx) => {
               result[text] = translated[idx];
             });
-            console.log([] Translated chunk  / );
+            console.log(`Translated chunk ${Math.floor(i / CHUNK_SIZE) + 1}.`);
           } else {
-            console.log([] Mismatch in chunk length! Falling back to 1-by-1 for this chunk.);
+            console.log('Mismatch in chunk length. Falling back to one-by-one translation for this chunk.');
             for (const text of chunk) {
                try {
                  const singleRes = await translate(text, { to: lang });
@@ -53,14 +53,14 @@ async function run() {
             }
           }
         } catch (e) {
-          console.error([] Error on chunk:, e.message);
+          console.error(`Error translating chunk for ${lang}:`, e.message);
           chunk.forEach(s => result[s] = s); // fallback
         }
         await sleep(500); // rate limiting
       }
     }
     fs.writeFileSync(filePath, JSON.stringify(result, null, 2));
-    console.log(Saved .json);
+    console.log(`Saved ${lang}.json`);
   }
 }
 run();

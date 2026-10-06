@@ -39,6 +39,7 @@ const Categories = () => {
       buttonText: 'Explore Clothes',
       highlights: ['Category & size filters', 'Season requirement tags', 'Direct handover'],
       emoji: '👕'
+    }
   ];
 
   return (

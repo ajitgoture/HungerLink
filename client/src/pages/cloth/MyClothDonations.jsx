@@ -8,6 +8,7 @@ import StatusBadge from '../../components/StatusBadge';
 import ProgressTracker from '../../components/ProgressTracker';
 import LiveClothTrackingMap from '../../components/LiveClothTrackingMap';
 import { TransferTimeline } from '../../components/TransferTimeline';
+import { RateModal } from '../../components/RateModal';
 import { useNotifications } from '../../context/NotificationContext';
 import { useSocket } from '../../context/SocketContext';
 const MyClothDonations = () => {

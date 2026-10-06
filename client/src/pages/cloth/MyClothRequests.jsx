@@ -9,6 +9,7 @@ import ClickablePhoneNumber from '../../components/ClickablePhoneNumber';
 import ConnectedDetailsModal from '../../components/ConnectedDetailsModal';
 import LiveClothTrackingMap from '../../components/LiveClothTrackingMap';
 import { TransferTimeline } from '../../components/TransferTimeline';
+import { RateModal } from '../../components/RateModal';
 import { useSocket } from '../../context/SocketContext';
 const MyClothRequests = () => {
   const { t, i18n } = useTranslation();
