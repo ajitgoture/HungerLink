@@ -43,7 +43,7 @@ const HowItWorks = () => {
             {t("Simple 4-Step Process")}
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-            {t("How HungerLink Works")}
+            {t("How Sahaay Works")}
           </h2>
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
             {t("Our platform simplifies direct peer-to-peer donation with real-time confirmation, privacy protection, and location guidance.")}

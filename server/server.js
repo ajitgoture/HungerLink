@@ -108,7 +108,7 @@ app.get('/favicon.ico', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     status: 'OK',
-    message: 'HungerLink backend is running',
+    message: 'Sahaay backend is running',
     version: '1.0.0',
     documentation: 'Use http://localhost:5173 for web UI or /api/health for REST API status',
   });
@@ -121,7 +121,7 @@ app.get('/api/health', (req, res) => {
     status: databaseConnected ? 'OK' : 'DEGRADED',
     database: databaseConnected ? 'connected' : 'disconnected',
     message: databaseConnected
-      ? 'HungerLink Backend API Running (Food & Clothes Modules Active)'
+      ? 'Sahaay Backend API Running (Food & Clothes Modules Active)'
       : 'The database is temporarily unavailable. Please try again shortly.',
   });
 });
@@ -175,6 +175,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[HungerLink Server Running]: http://localhost:${PORT}`);
+  console.log(`[Sahaay Server Running]: http://localhost:${PORT}`);
   console.log(`[Food & Clothes Fallback Schedulers Active]`);
 });

@@ -36,8 +36,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'HungerLink',
-        short_name: 'HungerLink',
+        name: 'Sahaay',
+        short_name: 'Sahaay',
         description: 'Smart Unified Donation System',
         theme_color: '#0f172a',
         background_color: '#ffffff',

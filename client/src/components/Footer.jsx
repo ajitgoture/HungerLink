@@ -23,7 +23,7 @@ const Footer = () => {
                 <HandHeart className="w-5 h-5 text-white" />
               </div>
               <span className="text-2xl font-black tracking-tight text-white">
-                {t("Hunger")}<span className="text-emerald-500">{t("Link")}</span>
+                Sahaay
               </span>
             </Link>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
@@ -54,7 +54,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="text-slate-400">{t("support@hungerlink.org")}</span>
+                <span className="text-slate-400">{t("support@sahaay.org")}</span>
               </li>
             </ul>
           </div>
@@ -70,7 +70,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
-          <p>&copy; {new Date().getFullYear()} {t("HungerLink. All rights reserved.")}</p>
+          <p>&copy; {new Date().getFullYear()} {t("Sahaay. All rights reserved.")}</p>
         </div>
       </div>
     </footer>;

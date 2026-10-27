@@ -46,7 +46,7 @@ const WhyChooseUs = () => {
             {t("Platform Advantages")}
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-            {t("Why Choose HungerLink")}
+            {t("Why Choose Sahaay")}
           </h2>
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
             {t("Designed with advanced real-time architecture, precise location privacy controls, and transparent need verification.")}

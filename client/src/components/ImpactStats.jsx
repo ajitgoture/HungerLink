@@ -20,7 +20,7 @@ const ImpactStats = () => {
   }, {
     label: t("Active Donors"),
     value: '500+',
-    description: t("Generous community members registered on HungerLink."),
+    description: t("Generous community members registered on Sahaay."),
     icon: HeartHandshake,
     color: 'text-cyan-600 bg-cyan-50 border-cyan-200'
   }, {

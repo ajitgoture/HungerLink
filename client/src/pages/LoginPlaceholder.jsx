@@ -13,7 +13,7 @@ const LoginPlaceholder = () => {
           <div className="w-14 h-14 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center mx-auto mb-3 shadow-sm">
             <LogIn className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-black text-slate-900">{t("Log In to HungerLink")}</h1>
+          <h1 className="text-2xl font-black text-slate-900">{t("Log In to Sahaay")}</h1>
           <p className="text-xs text-slate-500">{t("Access your Donor or Receiver Dashboard")}</p>
         </div>
 

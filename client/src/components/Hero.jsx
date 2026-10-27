@@ -44,7 +44,7 @@ const Hero = () => {
 
             {/* Subtitle / Description */}
             <p className="text-lg sm:text-xl text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              {t("HungerLink bridges compassionate donors with people in genuine need across")}{' '}
+              {t("Sahaay bridges compassionate donors with people in genuine need across")}{' '}
               <strong className="text-slate-900 font-semibold">{t("Food and Clothes")}</strong> {t("donations. Experience instant real-time verification, smart location matching, and transparent donation tracking.")}
             </p>
 

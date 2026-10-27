@@ -11,14 +11,14 @@ const ContactPlaceholder = () => {
         
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-black text-slate-900">{t("Contact Support")}</h1>
-          <p className="text-sm text-slate-500">{t("Have questions about HungerLink? We are here to help!")}</p>
+          <p className="text-sm text-slate-500">{t("Have questions about Sahaay? We are here to help!")}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center space-y-2">
             <Mail className="w-6 h-6 text-teal-600 mx-auto" />
             <h4 className="font-bold text-xs text-slate-900">{t("Email")}</h4>
-            <p className="text-xs text-slate-500">{t("support@hungerlink.org")}</p>
+            <p className="text-xs text-slate-500">{t("support@sahaay.org")}</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center space-y-2">

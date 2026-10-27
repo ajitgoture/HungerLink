@@ -84,7 +84,7 @@ const Register = () => {
             <UserPlus className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-black text-slate-900">{t("Create an Account")}</h1>
-          <p className="text-xs text-slate-500">{t("Join the HungerLink community today.")}</p>
+          <p className="text-xs text-slate-500">{t("Join the Sahaay community today.")}</p>
         </div>
 
         {error && <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center gap-2">

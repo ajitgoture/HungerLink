@@ -15,7 +15,7 @@ const RegisterPlaceholder = () => {
             <UserPlus className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-black text-slate-900">{t("Create Your Account")}</h1>
-          <p className="text-xs text-slate-500">{t("Join HungerLink as a Donor or Receiver")}</p>
+          <p className="text-xs text-slate-500">{t("Join Sahaay as a Donor or Receiver")}</p>
         </div>
 
         {/* Role Switcher */}

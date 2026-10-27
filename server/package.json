@@ -1,7 +1,7 @@
 {
   "name": "smart-donation-system-server",
   "version": "1.0.0",
-  "description": "Backend API for Smart Unified Donation System - HungerLink",
+  "description": "Backend API for Smart Unified Donation System - Sahaay",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

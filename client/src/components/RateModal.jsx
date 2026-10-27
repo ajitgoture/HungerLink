@@ -24,7 +24,7 @@ export const RateModal = ({ donation, isOpen, onClose, onReviewComplete, isDonor
           <div>
             <h2 className="text-xl font-bold text-slate-900">{t("Rate your Experience")}</h2>
             <p className="text-sm text-slate-500 mt-1">
-              {t("You recently completed a transfer. Please rate them to keep HungerLink safe and reliable!")}
+              {t("You recently completed a transfer. Please rate them to keep Sahaay safe and reliable!")}
             </p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors">

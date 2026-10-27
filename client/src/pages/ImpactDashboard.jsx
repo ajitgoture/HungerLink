@@ -72,7 +72,7 @@ const ImpactDashboard = () => {
               <ArrowLeft className="w-4 h-4" /> {"Back"}
             </button>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight">{"Your Impact"}</h1>
-            <p className="text-slate-500 mt-2">{"See the real-world difference you are making on HungerLink."}</p>
+            <p className="text-slate-500 mt-2">{"See the real-world difference you are making on Sahaay."}</p>
           </div>
           
           <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 p-1">
@@ -172,7 +172,7 @@ const ImpactDashboard = () => {
 
                 <div className="mt-10 p-6 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-4">
                   <div className="flex-1">
-                    <p className="text-sm text-slate-500">{"Every donation makes an incredible difference. The HungerLink community continues to provide real, localized support directly to those in need. Transparency and efficiency are at our core."}</p>
+                    <p className="text-sm text-slate-500">{"Every donation makes an incredible difference. The Sahaay community continues to provide real, localized support directly to those in need. Transparency and efficiency are at our core."}</p>
                   </div>
                 </div>
               </section>}

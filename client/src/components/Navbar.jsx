@@ -34,7 +34,7 @@ const Navbar = () => {
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="text-2xl font-black tracking-tight text-slate-900">
-                  {t("Hunger")}<span className="text-teal-600">{t("Link")}</span>
+                  Sahaay
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200/60">
                   <Sparkles className="w-2.5 h-2.5 mr-0.5 text-teal-500 animate-pulse" /> {t("Live")}

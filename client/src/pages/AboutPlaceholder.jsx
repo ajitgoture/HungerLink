@@ -14,7 +14,7 @@ const AboutPlaceholder = () => {
           <div className="w-16 h-16 rounded-2xl bg-teal-600 text-white flex items-center justify-center mx-auto shadow-lg">
             <HandHeart className="w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t("About HungerLink")}</h1>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t("About Sahaay")}</h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             {t("Connecting surplus resources with real human needs through real-time confirmation and location intelligence.")}
           </p>
@@ -24,10 +24,10 @@ const AboutPlaceholder = () => {
         <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-xl space-y-6">
           <h2 className="text-2xl font-bold text-slate-900">{t("Our Social Mission")}</h2>
           <p className="text-slate-600 leading-relaxed">
-            {t("HungerLink was built to eliminate third-party friction and long delays in community donation drives. Every day, thousands of tons of edible food and usable clothing are discarded while nearby individuals and shelters face critical shortages.")}
+            {t("Sahaay was built to eliminate third-party friction and long delays in community donation drives. Every day, thousands of tons of edible food and usable clothing are discarded while nearby individuals and shelters face critical shortages.")}
           </p>
           <p className="text-slate-600 leading-relaxed">
-            {t("By unifying **Food and Clothes** donation under one intelligent real-time platform, HungerLink ensures that help reaches verified receivers swiftly, safely, and transparently.")}
+            {t("By unifying **Food and Clothes** donation under one intelligent real-time platform, Sahaay ensures that help reaches verified receivers swiftly, safely, and transparently.")}
           </p>
         </div>
 
