@@ -504,6 +504,7 @@ const UNIT_OPTIONS = [{
                   position={formData.lat !== null && formData.lng !== null ? { lat: formData.lat, lng: formData.lng } : null}
                   setPosition={(pos) => setFormData(prev => ({ ...prev, lat: pos.lat, lng: pos.lng }))}
                   onPositionSelected={reverseGeocodePickup}
+                  suggestedArea={formData.area || (formData.pickupAddress && formData.pickupAddress.length < 30 ? formData.pickupAddress : '')}
                 />
               </div>
 
