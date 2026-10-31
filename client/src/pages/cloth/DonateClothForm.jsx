@@ -489,7 +489,6 @@ const DonateClothForm = () => {
                   position={locationData.lat !== null && locationData.lng !== null ? { lat: locationData.lat, lng: locationData.lng } : null}
                   setPosition={(pos) => setLocationData(previous => ({ ...previous, lat: pos.lat, lng: pos.lng }))}
                   onPositionSelected={reverseGeocodePickup}
-                  suggestedArea={locationData.area || (locationData.pickupAddress && locationData.pickupAddress.length < 30 ? locationData.pickupAddress : '')}
                 />
               </div>
 
