@@ -124,21 +124,51 @@ const DonateClothForm = () => {
   const reverseGeocodePickup = async ({ lat, lng }) => {
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-        headers: { 'Accept-Language': i18n.language || 'en' }
+        headers: { 'Accept-Language': i18n?.language || 'en' }
       });
-      if (!response.ok) return;
-      const result = await response.json();
-      const address = result.address || {};
-      setLocationData(previous => ({
-        ...previous,
-        lat,
-        lng,
-        city: address.city || address.town || address.village || address.municipality || address.locality || address.city_district || address.county || '',
-        area: address.suburb || address.neighbourhood || address.district || '',
-        pickupAddress: result.display_name || '',
-      }));
-    } catch {
-      showToast('Location Error', t('Location coordinates were saved. Please complete the address manually.'));
+      if (response.ok) {
+        const result = await response.json();
+        const address = result.address || {};
+        const detectedCity = address.city || address.town || address.village || address.municipality || address.locality || address.city_district || address.county || '';
+        const detectedArea = address.suburb || address.neighbourhood || address.district || '';
+        const detectedAddress = result.display_name || '';
+
+        setLocationData(previous => ({
+          ...previous,
+          lat,
+          lng,
+          city: detectedCity || previous.city,
+          area: detectedArea || previous.area,
+          pickupAddress: detectedAddress || previous.pickupAddress,
+        }));
+        return;
+      }
+    } catch (e) {
+      console.warn("Nominatim reverse geocode error, trying fallback:", e);
+    }
+
+    // Fallback reverse geocoding via BigDataCloud
+    try {
+      const fallbackResp = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+      if (fallbackResp.ok) {
+        const data = await fallbackResp.json();
+        const detectedCity = data.city || data.locality || '';
+        const detectedArea = data.locality || '';
+        const detectedAddress = [data.locality, data.city, data.principalSubdivision, data.countryName].filter(Boolean).join(', ');
+
+        setLocationData(previous => ({
+          ...previous,
+          lat,
+          lng,
+          city: detectedCity || previous.city,
+          area: detectedArea || previous.area,
+          pickupAddress: detectedAddress || previous.pickupAddress,
+        }));
+        return;
+      }
+    } catch (err) {
+      console.error("All reverse geocoders failed:", err);
+      showToast('Location Note', t('Location coordinates were saved. Please enter the precise street address manually.'));
     }
   };
 
